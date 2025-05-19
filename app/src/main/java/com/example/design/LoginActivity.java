@@ -1,6 +1,10 @@
 package com.example.design;
 
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -24,15 +28,26 @@ public class LoginActivity extends AppCompatActivity {
             String id = binding.editID.getText().toString();
             String pw = binding.ediPassword.getText().toString();
 
-            // 실제 로그인 로직은 서버 연동 등으로 구현
-            if (id.isEmpty() || pw.isEmpty()) {
-                Toast.makeText(this, "아이디와 비밀번호를 입력하세요.", Toast.LENGTH_SHORT).show();
+            myDBHelper myHelper;
+            SQLiteDatabase sqlDB;
+            myHelper = new myDBHelper(this);
+            sqlDB =myHelper.getReadableDatabase();
+            Cursor cursor = sqlDB.rawQuery("SELECT PASSWORD FROM UserTBL WHERE USERID = ?", new String[]{id});
+
+            if (cursor.moveToFirst()) {
+                String dbPw = cursor.getString(0);
+                if (dbPw.equals(pw)) {
+                    Toast.makeText(this, "로그인 성공!", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(this, MainActivity.class));
+                } else {
+                    Toast.makeText(this, "비밀번호가 틀렸습니다.", Toast.LENGTH_SHORT).show();
+                }
             } else {
-                // 임시: 로그인 성공 메시지
-                Toast.makeText(this, "로그인 시도: " + id, Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(this, MainActivity.class);
-                startActivity(intent);
+                Toast.makeText(this, "존재하지 않는 아이디입니다.", Toast.LENGTH_SHORT).show();
             }
+
+            cursor.close();
+            sqlDB.close();
         });
 
         // 회원가입 텍스트 클릭 이벤트
@@ -40,5 +55,25 @@ public class LoginActivity extends AppCompatActivity {
             Intent intent = new Intent(this, SignupActivity.class);
             startActivity(intent);
         });
+    }
+    public class myDBHelper extends SQLiteOpenHelper {
+        public myDBHelper(Context context){
+            super(context,"DesignTDB",null, 1);
+        }
+        @Override
+        public void onCreate(SQLiteDatabase db){
+            db.execSQL("CREATE TABLE IF NOT EXISTS UserTBL (" +
+                    "USERID TEXT PRIMARY KEY, " +
+                    "PASSWORD TEXT," +
+                    "Name TEXT, " +
+                    "gNumber INTEGER," +
+                    "Email TEXT," +
+                    "Birth TEXT);");
+        }
+        @Override
+        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion){
+            db.execSQL("Drop Table If exists UserTBL");
+            onCreate(db);
+        }
     }
 }
