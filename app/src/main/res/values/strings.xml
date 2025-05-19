@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">vellog_login</string>
+    <string name="app_name">Design_Trip</string>
     <string name="title_activity_login">activity_login</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
