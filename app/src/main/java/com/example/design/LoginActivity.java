@@ -2,6 +2,7 @@ package com.example.design;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -16,10 +17,23 @@ import com.example.design.databinding.ActivityLoginBinding;
 public class LoginActivity extends AppCompatActivity {
 
     private ActivityLoginBinding binding;
-
+    // SharedPreferences 관련 필드 선언
+    private static final String PREF_NAME = "MyPrefs";
+    private static final String KEY_IS_LOGGED_IN = "isLoggedIn";
+    private SharedPreferences sharedPreferences;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        sharedPreferences = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+
+        // 자동 로그인 체크
+        boolean isLoggedIn = sharedPreferences.getBoolean(KEY_IS_LOGGED_IN, false);
+        if (isLoggedIn) {
+            // 자동 로그인 상태면 바로 메인화면으로 이동
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
+            return;
+        }
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -39,6 +53,13 @@ public class LoginActivity extends AppCompatActivity {
                 if (dbPw.equals(pw)) {
                     Toast.makeText(this, "로그인 성공!", Toast.LENGTH_SHORT).show();
                     startActivity(new Intent(this, MainActivity.class));
+                    // 로그인 성공 시 로그인 상태 저장
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putBoolean(KEY_IS_LOGGED_IN, true);
+                    editor.apply();
+
+                    startActivity(new Intent(this, MainActivity.class));
+                    finish(); // 로그인 화면 종료
                 } else {
                     Toast.makeText(this, "비밀번호가 틀렸습니다.", Toast.LENGTH_SHORT).show();
                 }
