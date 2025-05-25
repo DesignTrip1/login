@@ -146,7 +146,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.495" />
 
-    <!-- 🔴 슬라이드 인디케이터 (회색/검정 점) -->
+    <!-- 🔴 슬라이드 인디케이터 (회색/검정 점). -->
     <LinearLayout
         android:id="@+id/indicatorLayout"
         android:layout_width="wrap_content"
@@ -157,5 +157,6 @@
         app:layout_constraintTop_toBottomOf="@id/viewPager"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
