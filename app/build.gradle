@@ -37,7 +37,9 @@ android {
 }
 
 dependencies {
-    implementation "com.kakao.maps.open:android:2.12.14"
+    implementation "com.google.android.gms:play-services-maps:19.2.0"
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation 'com.google.android.libraries.places:places:4.2.0'
 
     implementation libs.appcompat
     implementation libs.material
