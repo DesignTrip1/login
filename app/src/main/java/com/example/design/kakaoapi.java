@@ -23,17 +23,20 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.net.FetchPlaceRequest;
+import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.Autocomplete;
 import com.google.android.libraries.places.widget.AutocompleteActivity;
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
@@ -57,12 +60,10 @@ public class kakaoapi extends AppCompatActivity implements OnMapReadyCallback {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.kakaoapi);
 
-        // Places API 초기화 (API 키를 AndroidManifest.xml에 등록했는지 확인)
         if (!Places.isInitialized()) {
-            Places.initialize(getApplicationContext(), "AIzaSyDzpOiPwB8sN1zNPMQSEZBsgTGwYy-p80Y");
+            Places.initialize(getApplicationContext(), "YOUR_API_KEY");
         }
 
-        // 지도 프래그먼트 초기화
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.mapFragment);
         if (mapFragment != null) {
@@ -72,24 +73,18 @@ public class kakaoapi extends AppCompatActivity implements OnMapReadyCallback {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         requestLocationPermission();
 
-        // DB 초기화
         dbHelper = new MarkerDBHelper(this);
 
-        // 리사이클러뷰 초기화 및 어댑터에 클릭 리스너 연결
         recyclerView = findViewById(R.id.recyclerViewMarkers);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new MarkerAdapter(dbHelper.getAllMarkers(), new MarkerAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(MarkerItem item) {
-                if (mMap != null) {
-                    LatLng latLng = new LatLng(item.latitude, item.longitude);
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
-                }
+        adapter = new MarkerAdapter(dbHelper.getAllMarkers(), item -> {
+            if (mMap != null) {
+                LatLng latLng = new LatLng(item.latitude, item.longitude);
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
             }
         });
         recyclerView.setAdapter(adapter);
 
-        // 검색 버튼 초기화 및 클릭 리스너 연결
         Button btnSearch = findViewById(R.id.btnSearchPlace);
         btnSearch.setOnClickListener(v -> openPlaceSearch());
     }
@@ -126,17 +121,17 @@ public class kakaoapi extends AppCompatActivity implements OnMapReadyCallback {
         mMap.setMyLocationEnabled(true);
         showCurrentLocation();
 
-        // DB에서 저장된 핀 불러오기
         List<MarkerItem> savedMarkers = dbHelper.getAllMarkers();
         for (MarkerItem marker : savedMarkers) {
             LatLng pos = new LatLng(marker.latitude, marker.longitude);
-            mMap.addMarker(new MarkerOptions().position(pos).title("저장된 핀"));
+            mMap.addMarker(new MarkerOptions()
+                    .position(pos)
+                    .title(marker.name != null ? marker.name : "이름 없음")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
         }
 
-        // 마커 클릭 시 DB에서 삭제 및 지도/리스트 갱신
         mMap.setOnMarkerClickListener(marker -> {
             LatLng pos = marker.getPosition();
-
             new android.app.AlertDialog.Builder(this)
                     .setTitle("핀 삭제")
                     .setMessage("이 위치의 핀을 삭제하시겠습니까?")
@@ -146,24 +141,63 @@ public class kakaoapi extends AppCompatActivity implements OnMapReadyCallback {
                         adapter.updateMarkers(dbHelper.getAllMarkers());
                         Toast.makeText(this, "핀 삭제됨", Toast.LENGTH_SHORT).show();
                     })
-                    .setNegativeButton("아니오", (dialog, which) -> {
-                        dialog.dismiss(); // 아무 일도 하지 않음
-                    })
+                    .setNegativeButton("아니오", (dialog, which) -> dialog.dismiss())
                     .show();
-
-            return true; // 클릭 이벤트 소비됨
+            return true;
         });
-        // ★ POI 클릭 이벤트 추가 ★
-        mMap.setOnPoiClickListener(poi -> {
-            // POI 클릭 시 장소명과 ID를 다이얼로그로 보여주기
-            new android.app.AlertDialog.Builder(this)
-                    .setTitle(poi.name)
-                    .setMessage("Place ID: " + poi.placeId + "\n위도: " + poi.latLng.latitude + "\n경도: " + poi.latLng.longitude)
-                    .setPositiveButton("확인", null)
-                    .show();
 
-            // POI 위치에 마커 표시 및 인포 윈도우 바로 열기
-            mMap.addMarker(new MarkerOptions().position(poi.latLng).title(poi.name)).showInfoWindow();
+        mMap.setOnPoiClickListener(poi -> {
+            String placeId = poi.placeId;
+            List<Place.Field> fields = Arrays.asList(
+                    Place.Field.NAME,
+                    Place.Field.ADDRESS,
+                    Place.Field.PHONE_NUMBER,
+                    Place.Field.OPENING_HOURS,
+                    Place.Field.RATING
+            );
+
+            FetchPlaceRequest request = FetchPlaceRequest.newInstance(placeId, fields);
+            PlacesClient placesClient = Places.createClient(this);
+
+            placesClient.fetchPlace(request)
+                    .addOnSuccessListener(response -> {
+                        Place place = response.getPlace();
+
+                        StringBuilder info = new StringBuilder();
+                        info.append("이름: ").append(place.getName()).append("\n");
+                        info.append("주소: ").append(place.getAddress()).append("\n");
+                        info.append("전화번호: ").append(place.getPhoneNumber()).append("\n");
+                        info.append("평점: ").append(place.getRating()).append("\n");
+
+                        if (place.getOpeningHours() != null) {
+                            info.append("영업시간:\n");
+                            for (String day : place.getOpeningHours().getWeekdayText()) {
+                                info.append(day).append("\n");
+                            }
+                        }
+
+                        new android.app.AlertDialog.Builder(this)
+                                .setTitle("장소 상세 정보")
+                                .setMessage(info.toString())
+                                .setPositiveButton("확인", null)
+                                .show();
+
+                        mMap.addMarker(new MarkerOptions()
+                                        .position(poi.latLng)
+                                        .title(place.getName()))
+                                .showInfoWindow();
+                    })
+                    .addOnFailureListener(e -> {
+                        String errorMsg;
+                        if (e instanceof ApiException) {
+                            ApiException apiException = (ApiException) e;
+                            errorMsg = "API 오류 (코드 " + apiException.getStatusCode() + "): " +
+                                    (apiException.getStatusMessage() != null ? apiException.getStatusMessage() : "알 수 없음");
+                        } else {
+                            errorMsg = e.getLocalizedMessage();
+                        }
+                        Toast.makeText(this, "장소 정보를 가져오지 못했습니다:\n" + errorMsg, Toast.LENGTH_LONG).show();
+                    });
         });
     }
 
@@ -184,7 +218,6 @@ public class kakaoapi extends AppCompatActivity implements OnMapReadyCallback {
                 });
     }
 
-    // 장소 검색 화면 열기
     private void openPlaceSearch() {
         List<Place.Field> fields = Arrays.asList(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG);
         Intent intent = new Autocomplete.IntentBuilder(
@@ -193,7 +226,6 @@ public class kakaoapi extends AppCompatActivity implements OnMapReadyCallback {
         startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE);
     }
 
-    // 검색 결과 처리
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == AUTOCOMPLETE_REQUEST_CODE) {
@@ -202,9 +234,13 @@ public class kakaoapi extends AppCompatActivity implements OnMapReadyCallback {
                 LatLng latLng = place.getLatLng();
 
                 if (latLng != null) {
-                    mMap.addMarker(new MarkerOptions().position(latLng).title(place.getName()));
+                    mMap.addMarker(new MarkerOptions()
+                            .position(latLng)
+                            .title(place.getName())
+                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
-                    dbHelper.insertMarker(latLng.latitude, latLng.longitude);
+                    dbHelper.insertMarker(latLng.latitude, latLng.longitude, place.getName());
                     adapter.updateMarkers(dbHelper.getAllMarkers());
                     Toast.makeText(this, place.getName() + " 위치에 마커를 추가했습니다.", Toast.LENGTH_SHORT).show();
                 }
@@ -216,17 +252,17 @@ public class kakaoapi extends AppCompatActivity implements OnMapReadyCallback {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    // 데이터 클래스
     public static class MarkerItem {
         double latitude, longitude;
+        String name;
 
-        public MarkerItem(double lat, double lng) {
-            latitude = lat;
-            longitude = lng;
+        public MarkerItem(double lat, double lng, String name) {
+            this.latitude = lat;
+            this.longitude = lng;
+            this.name = name;
         }
     }
 
-    // RecyclerView 어댑터
     public static class MarkerAdapter extends RecyclerView.Adapter<MarkerAdapter.MarkerViewHolder> {
         private List<MarkerItem> markerList;
         private OnItemClickListener listener;
@@ -256,8 +292,8 @@ public class kakaoapi extends AppCompatActivity implements OnMapReadyCallback {
         @Override
         public void onBindViewHolder(@NonNull MarkerViewHolder holder, int position) {
             MarkerItem item = markerList.get(position);
-            holder.title.setText("위도: " + item.latitude);
-            holder.subtitle.setText("경도: " + item.longitude);
+            holder.title.setText(item.name != null ? item.name : "이름 없음");
+            holder.subtitle.setText("위도: " + item.latitude + ", 경도: " + item.longitude);
 
             holder.itemView.setOnClickListener(v -> {
                 if (listener != null) {
@@ -282,7 +318,6 @@ public class kakaoapi extends AppCompatActivity implements OnMapReadyCallback {
         }
     }
 
-    // SQLite 헬퍼 클래스
     public static class MarkerDBHelper extends SQLiteOpenHelper {
         private static final String DB_NAME = "markers.db";
         private static final int DB_VERSION = 1;
@@ -293,7 +328,7 @@ public class kakaoapi extends AppCompatActivity implements OnMapReadyCallback {
 
         @Override
         public void onCreate(SQLiteDatabase db) {
-            db.execSQL("CREATE TABLE marker_table (id INTEGER PRIMARY KEY AUTOINCREMENT, latitude REAL, longitude REAL)");
+            db.execSQL("CREATE TABLE marker_table (id INTEGER PRIMARY KEY AUTOINCREMENT, latitude REAL, longitude REAL, name TEXT)");
         }
 
         @Override
@@ -302,25 +337,25 @@ public class kakaoapi extends AppCompatActivity implements OnMapReadyCallback {
             onCreate(db);
         }
 
-        public void insertMarker(double lat, double lng) {
+        public void insertMarker(double lat, double lng, String name) {
             SQLiteDatabase db = getWritableDatabase();
-            db.execSQL("INSERT INTO marker_table (latitude, longitude) VALUES (?, ?)", new Object[]{lat, lng});
+            db.execSQL("INSERT INTO marker_table (latitude, longitude, name) VALUES (?, ?, ?)", new Object[]{lat, lng, name});
         }
 
         public void deleteMarker(double lat, double lng) {
             SQLiteDatabase db = getWritableDatabase();
-            db.execSQL("DELETE FROM marker_table WHERE latitude = ? AND longitude = ?",
-                    new Object[]{lat, lng});
+            db.execSQL("DELETE FROM marker_table WHERE latitude = ? AND longitude = ?", new Object[]{lat, lng});
         }
 
         public List<MarkerItem> getAllMarkers() {
             List<MarkerItem> list = new ArrayList<>();
             SQLiteDatabase db = getReadableDatabase();
-            Cursor cursor = db.rawQuery("SELECT latitude, longitude FROM marker_table", null);
+            Cursor cursor = db.rawQuery("SELECT latitude, longitude, name FROM marker_table", null);
             while (cursor.moveToNext()) {
                 double lat = cursor.getDouble(0);
                 double lng = cursor.getDouble(1);
-                list.add(new MarkerItem(lat, lng));
+                String name = cursor.getString(2);
+                list.add(new MarkerItem(lat, lng, name));
             }
             cursor.close();
             return list;
