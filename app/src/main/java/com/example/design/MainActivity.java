@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
         imageList.add(R.drawable.busan);
         imageList.add(R.drawable.jeonju);
 
-        sliderAdapter = new SliderAdapter(imageList);
+        sliderAdapter = new SliderAdapter(this, imageList);
         viewPager.setAdapter(sliderAdapter);
 
         // 점 Indicator 셋업
