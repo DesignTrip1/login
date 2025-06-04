@@ -1,7 +1,7 @@
 package com.example.design.roulette;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -11,9 +11,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.design.R;
 
 public class RouletteActivity extends AppCompatActivity {
+
     RouletteView rouletteView;
     Button spinButton;
+    Button showSliderButton;
     TextView resultText;
+    String finalResult = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,10 +25,24 @@ public class RouletteActivity extends AppCompatActivity {
 
         rouletteView = findViewById(R.id.roulette);
         spinButton = findViewById(R.id.spin_button);
+        showSliderButton = findViewById(R.id.show_slider_button);
         resultText = findViewById(R.id.result_text);
+
         spinButton.setOnClickListener(v -> rouletteView.spin());
 
-        rouletteView.setOnRouletteResultListener(result -> runOnUiThread(() -> showResultText(result)));
+        rouletteView.setOnRouletteResultListener(result -> runOnUiThread(() -> {
+            finalResult = result;
+            showResultText(result);
+            showSliderButton.setVisibility(View.VISIBLE);  // 결과 나오면 버튼 보이게
+        }));
+
+        showSliderButton.setOnClickListener(v -> {
+            if (finalResult != null) {
+                Intent intent = new Intent(RouletteActivity.this, RouletteSliderActivity.class);
+                intent.putExtra("region", finalResult);
+                startActivity(intent);
+            }
+        });
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("룰렛");
@@ -36,24 +53,10 @@ public class RouletteActivity extends AppCompatActivity {
     private void showResultText(String result) {
         resultText.setText("결과: " + result);
         resultText.setVisibility(View.VISIBLE);
+        resultText.setAlpha(0f);
         resultText.animate()
                 .alpha(1f)
                 .setDuration(300)
-                .withEndAction(() -> resultText.postDelayed(() ->
-                                resultText.animate()
-                                        .alpha(0f)
-                                        .setDuration(300)
-                                        .withEndAction(() -> resultText.setVisibility(View.GONE))
-                        , 2000))
                 .start();
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            finish();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 }

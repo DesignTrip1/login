@@ -1,4 +1,4 @@
-package com.example.design;
+package com.example.design.community;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -6,6 +6,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.design.R;
 
 public class CommunityActivity extends AppCompatActivity {
     @Override
