@@ -1,6 +1,7 @@
 package com.example.design.community;
 
 import android.content.Intent;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,7 +35,11 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         holder.titleTextView.setText(post.getTitle());
         holder.contentTextView.setText(post.getContent());
 
-        // ✅ 게시글 클릭 시 상세 페이지로 이동
+        // 항상 3줄까지만 보이고 생략(...) 처리
+        holder.contentTextView.setMaxLines(3);
+        holder.contentTextView.setEllipsize(TextUtils.TruncateAt.END);
+
+        // 카드 전체 클릭 시 상세 보기 화면으로 이동
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(v.getContext(), PostDetailActivity.class);
             intent.putExtra("title", post.getTitle());
@@ -53,8 +58,8 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
         public PostViewHolder(@NonNull View itemView) {
             super(itemView);
-            titleTextView = itemView.findViewById(R.id.postTitle);
-            contentTextView = itemView.findViewById(R.id.postContent);
+            titleTextView = itemView.findViewById(R.id.textViewTitle);
+            contentTextView = itemView.findViewById(R.id.textViewContent);
         }
     }
 }
