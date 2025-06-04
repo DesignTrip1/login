@@ -1,49 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:padding="16dp"
-    android:orientation="vertical"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <Spinner
-        android:id="@+id/spinnerDay"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+    <!-- 상단 툴바나 뒤로가기 버튼이 필요하면 여기에 추가 -->
 
-    <EditText
-        android:id="@+id/editTime"
-        android:hint="시간 선택 (예: 14:00)"
-        android:focusable="false"
-        android:layout_width="match_parent"
+    <!-- TabLayout: Day 1, Day 2, ... -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:inputType="none"
-        android:layout_marginTop="8dp" />
+        app:tabMode="scrollable"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:background="@color/tab_background"
+        app:tabTextColor="@color/tab_text"
+        app:tabSelectedTextColor="@color/tab_selected"/>
 
-    <EditText
-        android:id="@+id/editPlace"
-        android:hint="장소 입력"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" />
-
-    <EditText
-        android:id="@+id/editMemo"
-        android:hint="메모 (선택)"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp" />
-
-    <Button
-        android:id="@+id/btnAddDetail"
-        android:text="일정 추가"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerDetail"
-        android:layout_width="match_parent"
+    <!-- ViewPager2: 각 Day에 해당하는 스케줄 프래그먼트 -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="16dp" />
-</LinearLayout>
+        app:layout_constraintTop_toBottomOf="@id/tabLayout"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

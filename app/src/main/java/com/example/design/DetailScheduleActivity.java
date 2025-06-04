@@ -1,73 +1,66 @@
 package com.example.design;
 
-import android.app.TimePickerDialog;
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.*;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
+
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
+
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class DetailScheduleActivity extends AppCompatActivity {
 
-    private Spinner daySpinner;
-    private EditText editTime, editPlace, editMemo;
-    private Button btnAddDetail;
-    private RecyclerView recyclerDetail;
-    private DetailAdapter adapter;
-    private List<DetailItem> detailList;
+    private TabLayout tabLayout;
+    private ViewPager2 viewPager;
+    private DayPagerAdapter dayPagerAdapter;
+    private List<String> dayTitles;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail_schedule);
 
-        daySpinner = findViewById(R.id.spinnerDay);
-        editTime = findViewById(R.id.editTime);
-        editPlace = findViewById(R.id.editPlace);
-        editMemo = findViewById(R.id.editMemo);
-        btnAddDetail = findViewById(R.id.btnAddDetail);
-        recyclerDetail = findViewById(R.id.recyclerDetail);
+        tabLayout = findViewById(R.id.tabLayout);
+        viewPager = findViewById(R.id.viewPager);
 
-        detailList = new ArrayList<>();
-        adapter = new DetailAdapter(detailList);
-        recyclerDetail.setLayoutManager(new LinearLayoutManager(this));
-        recyclerDetail.setAdapter(adapter);
+        // ✅ PlanItem에서 start/end 날짜 받아오기 (예시: intent로 받았다고 가정)
+        Intent intent = getIntent();
+        String startDate = intent.getStringExtra("startDate");
+        String endDate = intent.getStringExtra("endDate");
 
-        // 요일 설정
-        String[] days = {"1일차", "2일차", "3일차", "4일차", "5일차"};
-        ArrayAdapter<String> dayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, days);
-        dayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        daySpinner.setAdapter(dayAdapter);
+        dayTitles = generateDayList(startDate, endDate);
+        dayPagerAdapter = new DayPagerAdapter(this, dayTitles);
+        viewPager.setAdapter(dayPagerAdapter);
 
-        // 시간 선택
-        editTime.setOnClickListener(v -> {
-            Calendar c = Calendar.getInstance();
-            new TimePickerDialog(this, (view, hour, minute) -> {
-                String timeStr = String.format("%02d:%02d", hour, minute);
-                editTime.setText(timeStr);
-            }, c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), true).show();
-        });
+        new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
+            tab.setText(dayTitles.get(position));
+        }).attach();
+    }
 
-        // 추가 버튼
-        btnAddDetail.setOnClickListener(v -> {
-            String day = daySpinner.getSelectedItem().toString();
-            String time = editTime.getText().toString();
-            String place = editPlace.getText().toString().trim();
-            String memo = editMemo.getText().toString().trim();
+    private List<String> generateDayList(String start, String end) {
+        List<String> result = new ArrayList<>();
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.KOREA);
+            Date startDate = sdf.parse(start);
+            Date endDate = sdf.parse(end);
 
-            if (time.isEmpty() || place.isEmpty()) {
-                Toast.makeText(this, "시간과 장소는 필수 입력입니다", Toast.LENGTH_SHORT).show();
-                return;
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(startDate);
+
+            int dayIndex = 1;
+            while (!cal.getTime().after(endDate)) {
+                result.add("Day " + dayIndex);
+                cal.add(Calendar.DATE, 1);
+                dayIndex++;
             }
-
-            detailList.add(new DetailItem(day, time, place, memo));
-            adapter.notifyItemInserted(detailList.size() - 1);
-
-            editTime.setText("");
-            editPlace.setText("");
-            editMemo.setText("");
-        });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 }

@@ -14,16 +14,23 @@ import java.util.List;
 public class PlanAdapter extends RecyclerView.Adapter<PlanAdapter.PlanViewHolder> {
 
     private List<PlanItem> planList;
-    private OnItemClickListener onItemClickListener; // ✅ 클릭 리스너 인터페이스 선언
+    private OnItemClickListener onItemClickListener;
+    private OnDeleteConfirmedListener onDeleteConfirmedListener;
 
-    // 인터페이스 정의
     public interface OnItemClickListener {
         void onItemClick(int position);
     }
 
-    // 클릭 리스너 설정 메서드 추가
+    public interface OnDeleteConfirmedListener {
+        void onDeleteConfirmed(int position);
+    }
+
     public void setOnItemClickListener(OnItemClickListener listener) {
         this.onItemClickListener = listener;
+    }
+
+    public void setOnDeleteConfirmedListener(OnDeleteConfirmedListener listener) {
+        this.onDeleteConfirmedListener = listener;
     }
 
     public PlanAdapter(List<PlanItem> planList) {
@@ -34,7 +41,7 @@ public class PlanAdapter extends RecyclerView.Adapter<PlanAdapter.PlanViewHolder
     @Override
     public PlanViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_plan, parent, false);
-        return new PlanViewHolder(view, onItemClickListener); // 클릭 리스너 넘김
+        return new PlanViewHolder(view);
     }
 
     @Override
@@ -42,8 +49,6 @@ public class PlanAdapter extends RecyclerView.Adapter<PlanAdapter.PlanViewHolder
         PlanItem plan = planList.get(position);
         holder.txtTitle.setText(plan.getTitle());
         holder.txtPeriod.setText(plan.getPeriod());
-
-        // 삭제 버튼 처리 등은 여기서 해도 OK
     }
 
     @Override
@@ -51,19 +56,34 @@ public class PlanAdapter extends RecyclerView.Adapter<PlanAdapter.PlanViewHolder
         return planList.size();
     }
 
-    static class PlanViewHolder extends RecyclerView.ViewHolder {
+    class PlanViewHolder extends RecyclerView.ViewHolder {
         TextView txtTitle, txtPeriod;
         ImageButton btnDelete;
 
-        public PlanViewHolder(@NonNull View itemView, OnItemClickListener listener) {
+        public PlanViewHolder(@NonNull View itemView) {
             super(itemView);
             txtTitle = itemView.findViewById(R.id.txtPlanTitle);
             txtPeriod = itemView.findViewById(R.id.txtPlanPeriod);
             btnDelete = itemView.findViewById(R.id.btnDelete);
+            btnDelete.setColorFilter(null); // tint 제거
 
             itemView.setOnClickListener(v -> {
-                if (listener != null && getAdapterPosition() != RecyclerView.NO_POSITION) {
-                    listener.onItemClick(getAdapterPosition());
+                if (onItemClickListener != null && getAdapterPosition() != RecyclerView.NO_POSITION) {
+                    onItemClickListener.onItemClick(getAdapterPosition());
+                }
+            });
+
+            btnDelete.setOnClickListener(v -> {
+                if (onDeleteConfirmedListener != null && getAdapterPosition() != RecyclerView.NO_POSITION) {
+                    int position = getAdapterPosition();
+                    new AlertDialog.Builder(itemView.getContext())
+                            .setTitle("일정 삭제")
+                            .setMessage("이 일정을 삭제하시겠습니까?")
+                            .setPositiveButton("삭제", (dialog, which) -> {
+                                onDeleteConfirmedListener.onDeleteConfirmed(position);
+                            })
+                            .setNegativeButton("취소", null)
+                            .show();
                 }
             });
         }

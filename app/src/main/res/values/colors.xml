@@ -8,4 +8,7 @@
     <color name="light_blue_A200">#FF40C4FF</color>
     <color name="light_blue_A400">#FF00B0FF</color>
     <color name="black_overlay">#66000000</color>
+    <color name="tab_background">#FFF8F0</color>       <!-- 아이보리빛 살구 -->
+    <color name="tab_text">#888888</color>             <!-- 부드러운 차콜 회색 -->
+    <color name="tab_selected">#FF8A65</color>         <!-- 부드러운 피치 오렌지 -->
 </resources>
