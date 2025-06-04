@@ -41,6 +41,9 @@
             android:name=".PlanActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
+        <activity android:name=".community.PostDetailActivity"/>
+
+
         <!-- 커뮤니티 화면 -->
         <activity
             android:name=".community.CommunityActivity"
@@ -51,6 +54,7 @@
             android:name=".community.WritePostActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:exported="false" />
+
 
         <!-- 룰렛 화면 -->
         <activity
@@ -63,6 +67,9 @@
             android:name=".GroupActivity"
             android:exported="false"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <activity android:name=".roulette.RouletteSliderActivity" />
+
 
         <!-- 회원가입 화면 -->
         <activity
