@@ -55,14 +55,18 @@ public class kakaoapi extends AppCompatActivity implements OnMapReadyCallback {
     private final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
     private final int AUTOCOMPLETE_REQUEST_CODE = 2001;
 
+    private PlacesClient placesClient;  // 한 번만 생성하는 PlacesClient
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.kakaoapi);
 
         if (!Places.isInitialized()) {
-            Places.initialize(getApplicationContext(), "YOUR_API_KEY");
+            Places.initialize(getApplicationContext(), "AIzaSyDzpOiPwB8sN1zNPMQSEZBsgTGwYy-p80Y");
         }
+
+        placesClient = Places.createClient(this);  // 딱 한 번만 초기화
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.mapFragment);
@@ -157,9 +161,8 @@ public class kakaoapi extends AppCompatActivity implements OnMapReadyCallback {
             );
 
             FetchPlaceRequest request = FetchPlaceRequest.newInstance(placeId, fields);
-            PlacesClient placesClient = Places.createClient(this);
 
-            placesClient.fetchPlace(request)
+            placesClient.fetchPlace(request)  // 새로 생성하지 말고 재사용
                     .addOnSuccessListener(response -> {
                         Place place = response.getPlace();
 
@@ -276,44 +279,36 @@ public class kakaoapi extends AppCompatActivity implements OnMapReadyCallback {
             this.listener = listener;
         }
 
-        public void updateMarkers(List<MarkerItem> newList) {
-            markerList = newList;
+        public void updateMarkers(List<MarkerItem> list) {
+            this.markerList = list;
             notifyDataSetChanged();
         }
 
         @NonNull
         @Override
         public MarkerViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(android.R.layout.simple_list_item_2, parent, false);
-            return new MarkerViewHolder(view);
+            View v = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
+            return new MarkerViewHolder(v);
         }
 
         @Override
         public void onBindViewHolder(@NonNull MarkerViewHolder holder, int position) {
             MarkerItem item = markerList.get(position);
-            holder.title.setText(item.name != null ? item.name : "이름 없음");
-            holder.subtitle.setText("위도: " + item.latitude + ", 경도: " + item.longitude);
-
-            holder.itemView.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onItemClick(item);
-                }
-            });
+            holder.textView.setText(item.name != null ? item.name : "이름 없음");
+            holder.itemView.setOnClickListener(v -> listener.onItemClick(item));
         }
 
         @Override
         public int getItemCount() {
-            return markerList.size();
+            return markerList != null ? markerList.size() : 0;
         }
 
         static class MarkerViewHolder extends RecyclerView.ViewHolder {
-            TextView title, subtitle;
+            TextView textView;
 
-            public MarkerViewHolder(View itemView) {
+            MarkerViewHolder(View itemView) {
                 super(itemView);
-                title = itemView.findViewById(android.R.id.text1);
-                subtitle = itemView.findViewById(android.R.id.text2);
+                textView = itemView.findViewById(android.R.id.text1);
             }
         }
     }
@@ -328,34 +323,42 @@ public class kakaoapi extends AppCompatActivity implements OnMapReadyCallback {
 
         @Override
         public void onCreate(SQLiteDatabase db) {
-            db.execSQL("CREATE TABLE marker_table (id INTEGER PRIMARY KEY AUTOINCREMENT, latitude REAL, longitude REAL, name TEXT)");
+            db.execSQL("CREATE TABLE markers (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "latitude REAL," +
+                    "longitude REAL," +
+                    "name TEXT" +
+                    ")");
         }
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            db.execSQL("DROP TABLE IF EXISTS marker_table");
+            db.execSQL("DROP TABLE IF EXISTS markers");
             onCreate(db);
         }
 
         public void insertMarker(double lat, double lng, String name) {
             SQLiteDatabase db = getWritableDatabase();
-            db.execSQL("INSERT INTO marker_table (latitude, longitude, name) VALUES (?, ?, ?)", new Object[]{lat, lng, name});
+            db.execSQL("INSERT INTO markers (latitude, longitude, name) VALUES (?, ?, ?)",
+                    new Object[]{lat, lng, name});
         }
 
         public void deleteMarker(double lat, double lng) {
             SQLiteDatabase db = getWritableDatabase();
-            db.execSQL("DELETE FROM marker_table WHERE latitude = ? AND longitude = ?", new Object[]{lat, lng});
+            db.execSQL("DELETE FROM markers WHERE latitude = ? AND longitude = ?", new Object[]{lat, lng});
         }
 
         public List<MarkerItem> getAllMarkers() {
             List<MarkerItem> list = new ArrayList<>();
             SQLiteDatabase db = getReadableDatabase();
-            Cursor cursor = db.rawQuery("SELECT latitude, longitude, name FROM marker_table", null);
-            while (cursor.moveToNext()) {
-                double lat = cursor.getDouble(0);
-                double lng = cursor.getDouble(1);
-                String name = cursor.getString(2);
-                list.add(new MarkerItem(lat, lng, name));
+            Cursor cursor = db.rawQuery("SELECT latitude, longitude, name FROM markers", null);
+            if (cursor.moveToFirst()) {
+                do {
+                    double lat = cursor.getDouble(0);
+                    double lng = cursor.getDouble(1);
+                    String name = cursor.getString(2);
+                    list.add(new MarkerItem(lat, lng, name));
+                } while (cursor.moveToNext());
             }
             cursor.close();
             return list;
