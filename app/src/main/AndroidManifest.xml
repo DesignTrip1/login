@@ -68,6 +68,9 @@
             android:exported="false"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
+        <activity android:name=".roulette.RouletteSliderActivity" />
+
+
         <!-- 회원가입 화면 -->
         <activity
             android:name=".login.SignupActivity"
