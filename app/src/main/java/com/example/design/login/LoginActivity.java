@@ -1,4 +1,4 @@
-package com.example.design;
+package com.example.design.login;
 
 import android.content.Context;
 import android.content.Intent;
@@ -12,6 +12,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.design.MainActivity;
 import com.example.design.databinding.ActivityLoginBinding;
 
 public class LoginActivity extends AppCompatActivity {

@@ -1,8 +1,10 @@
-package com.example.design;
+package com.example.design.recommend;
 
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
+
+import com.example.design.R;
 
 import java.util.ArrayList;
 import java.util.List;

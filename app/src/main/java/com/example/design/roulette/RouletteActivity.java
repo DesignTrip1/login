@@ -1,4 +1,4 @@
-package com.example.design;
+package com.example.design.roulette;
 
 import android.os.Bundle;
 import android.view.MenuItem;
@@ -7,6 +7,8 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.design.R;
 
 public class RouletteActivity extends AppCompatActivity {
     RouletteView rouletteView;
@@ -21,7 +23,6 @@ public class RouletteActivity extends AppCompatActivity {
         rouletteView = findViewById(R.id.roulette);
         spinButton = findViewById(R.id.spin_button);
         resultText = findViewById(R.id.result_text);
-
         spinButton.setOnClickListener(v -> rouletteView.spin());
 
         rouletteView.setOnRouletteResultListener(result -> runOnUiThread(() -> showResultText(result)));
