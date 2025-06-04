@@ -37,12 +37,12 @@
 
         <!-- 커뮤니티 화면 -->
         <activity
-            android:name=".CommunityActivity"
+            android:name=".community.CommunityActivity"
             android:exported="false"
             android:theme="@style/Theme.AppCompat.Light.DarkActionBar" />
 
         <activity
-            android:name=".WritePostActivity"
+            android:name=".community.WritePostActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:exported="false" />
 

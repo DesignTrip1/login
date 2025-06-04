@@ -8,18 +8,21 @@
     android:padding="16dp">
 
     <!-- 지도 열기 버튼 (위로 이동) -->
+
+    <!-- 아이콘 4개 + 텍스트 (지도 열기 버튼 아래로 이동) -->
+
     <Button
         android:id="@+id/btnOpenMap"
         android:layout_width="match_parent"
         android:layout_height="112dp"
-        android:layout_marginTop="64dp"
+        android:layout_marginTop="120dp"
         android:text="🗺 지도 열기"
         android:textSize="20sp"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- 아이콘 4개 + 텍스트 (지도 열기 버튼 아래로 이동) -->
     <LinearLayout
         android:id="@+id/layoutIcons"
         android:layout_width="0dp"
@@ -142,7 +145,7 @@
         android:id="@+id/viewPager"
         android:layout_width="308dp"
         android:layout_height="313dp"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="84dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.492"
         app:layout_constraintStart_toStartOf="parent"

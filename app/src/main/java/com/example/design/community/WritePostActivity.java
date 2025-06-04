@@ -1,4 +1,4 @@
-package com.example.design;
+package com.example.design.community;
 
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -7,6 +7,8 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.design.R;
 
 public class WritePostActivity extends AppCompatActivity {
 
