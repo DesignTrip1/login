@@ -5,34 +5,65 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:padding="16dp"
+    tools:context=".MainActivity">
 
-    <!-- 지도 열기 버튼 (위로 이동) -->
-
-    <!-- 아이콘 4개 + 텍스트 (지도 열기 버튼 아래로 이동) -->
-
-    <Button
-        android:id="@+id/btnOpenMap"
+    <!-- 지도 이미지 -->
+    <ImageView
+        android:id="@+id/imgMap"
         android:layout_width="match_parent"
-        android:layout_height="112dp"
-        android:layout_marginTop="120dp"
-        android:text="🗺 지도 열기"
-        android:textSize="20sp"
+        android:layout_height="200dp"
+        android:layout_marginTop="76dp"
+        android:adjustViewBounds="true"
+        android:background="@drawable/rounded_border"
+        android:clickable="true"
+        android:clipToOutline="true"
+        android:contentDescription="지도 열기"
+        android:focusable="true"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_map"
+        app:layout_constraintBottom_toTopOf="@id/viewPager"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- 추천 여행지 슬라이드 -->
+
+    <!-- 슬라이드 인디케이터 -->
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="360dp"
+        android:layout_marginTop="40dp"
+        android:clipToPadding="false"
+        android:padding="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/imgMap" />
+
+    <LinearLayout
+        android:id="@+id/indicatorLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/viewPager"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 아이콘 4개 영역 (하단 고정) -->
     <LinearLayout
         android:id="@+id/layoutIcons"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:layout_marginTop="32dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="24dp"
         android:weightSum="4"
-        app:layout_constraintTop_toBottomOf="@id/btnOpenMap"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -136,30 +167,5 @@
                 android:layout_marginTop="4dp"/>
         </LinearLayout>
     </LinearLayout>
-
-    <!-- 추천 여행지 ViewPager2 -->
-
-    <!-- 🔴 슬라이드 인디케이터 (회색/검정 점) -->
-
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/viewPager"
-        android:layout_width="308dp"
-        android:layout_height="313dp"
-        android:layout_marginTop="84dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.492"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layoutIcons" />
-
-    <LinearLayout
-        android:id="@+id/indicatorLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="8dp"
-        android:gravity="center"
-        app:layout_constraintTop_toBottomOf="@id/viewPager"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

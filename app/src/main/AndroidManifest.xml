@@ -48,12 +48,14 @@
         <activity
             android:name=".community.CommunityActivity"
             android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.DarkActionBar" />
+            android:theme="@style/Theme.AppCompat.Light" />
 
         <activity
             android:name=".community.WritePostActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:exported="false" />
+
+        <activity android:name=".community.CommentActivity" />
 
 
         <!-- 룰렛 화면 -->
