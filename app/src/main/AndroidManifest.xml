@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.design">
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
 
     <application
         android:allowBackup="true"
@@ -13,7 +16,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Design"
         tools:targetApi="31">
-
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyDzpOiPwB8sN1zNPMQSEZBsgTGwYy-p80Y"/>
         <!-- 메인 화면 -->
         <activity
             android:name=".MainActivity"
@@ -25,7 +30,7 @@
             android:name=".MapActivity"
             android:exported="false"
             android:theme="@style/Theme.AppCompat.Light.DarkActionBar" />
-
+        <activity android:name=".kakaoapi"/>
         <!-- 여행 일정 화면 -->
         <activity
             android:name=".AddScheduleActivity" />
@@ -76,6 +81,5 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
     </application>
 </manifest>
