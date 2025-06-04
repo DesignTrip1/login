@@ -55,6 +55,8 @@
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"
             android:exported="false" />
 
+        <activity android:name=".community.CommentActivity" />
+
 
         <!-- 룰렛 화면 -->
         <activity

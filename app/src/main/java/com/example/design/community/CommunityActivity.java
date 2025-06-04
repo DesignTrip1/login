@@ -34,7 +34,7 @@ public class CommunityActivity extends AppCompatActivity {
 
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new PostAdapter(postList);
+        adapter = new PostAdapter(this, postList);
         recyclerView.setAdapter(adapter);
 
         // ✅ 툴바에 가려지지 않도록 ItemDecoration 추가
