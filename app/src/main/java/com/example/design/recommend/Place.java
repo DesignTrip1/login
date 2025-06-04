@@ -1,4 +1,4 @@
-package com.example.design;
+package com.example.design.recommend;
 
 public class Place {
     private int imageResId;

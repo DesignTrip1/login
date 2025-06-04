@@ -1,4 +1,4 @@
-package com.example.design;
+package com.example.design.login;
 
 
 import android.content.ContentValues;
@@ -13,6 +13,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.design.R;
 
 
 public class SignupActivity extends AppCompatActivity {

@@ -48,7 +48,7 @@
 
         <!-- 룰렛 화면 -->
         <activity
-            android:name=".RouletteActivity"
+            android:name=".roulette.RouletteActivity"
             android:exported="false"
             android:theme="@style/Theme.AppCompat.Light" />
 
@@ -60,20 +60,20 @@
 
         <!-- 회원가입 화면 -->
         <activity
-            android:name=".SignupActivity"
+            android:name=".login.SignupActivity"
             android:exported="false"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
         <!-- 추천 여행지 슬라이드 전체화면 액티비티 -->
         <activity
-            android:name=".FullscreenSliderActivity"
+            android:name=".recommend.FullscreenSliderActivity"
             android:exported="false"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
 
         <!-- 로그인 액티비티 -->
         <activity
-            android:name=".LoginActivity"
+            android:name=".login.LoginActivity"
             android:exported="true"
             android:theme="@style/Theme.Design">
             <intent-filter>

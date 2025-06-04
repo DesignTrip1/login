@@ -14,7 +14,7 @@
         android:layout_weight="1"
         tools:context=".MainActivity">
 
-        <com.example.design.RouletteView
+        <com.example.design.roulette.RouletteView
             android:id="@+id/roulette"
             android:layout_width="300dp"
             android:layout_height="300dp"

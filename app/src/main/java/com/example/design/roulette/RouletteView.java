@@ -1,4 +1,4 @@
-package com.example.design;
+package com.example.design.roulette;
 
 import android.content.Context;
 import android.graphics.Canvas;
