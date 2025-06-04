@@ -63,7 +63,8 @@ public class MainActivity extends AppCompatActivity {
         ImageButton btnRoulette = findViewById(R.id.btnRoulette);
         ImageButton btnGroup = findViewById(R.id.btnGroup);
 
-        btnPlan.setOnClickListener(v -> startActivity(new Intent(this, AddScheduleActivity.class)));
+        // ✅ 수정: AddScheduleActivity → PlanActivity
+        btnPlan.setOnClickListener(v -> startActivity(new Intent(this, PlanActivity.class)));
         btnCommunity.setOnClickListener(v -> startActivity(new Intent(this, CommunityActivity.class)));
         btnRoulette.setOnClickListener(v -> startActivity(new Intent(this, RouletteActivity.class)));
         btnGroup.setOnClickListener(v -> startActivity(new Intent(this, GroupActivity.class)));
@@ -100,4 +101,4 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-}//
+}
