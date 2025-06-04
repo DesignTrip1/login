@@ -7,7 +7,6 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
@@ -24,7 +23,7 @@ public class RouletteView extends SurfaceView implements SurfaceHolder.Callback 
     private RectF rectF;
     private float sweepAngle;
     private List<String> items = new ArrayList<>();
-    private int itemCount = 8;
+    private int itemCount;
     private int radius;
     private int centerX;
     private int centerY;
@@ -53,7 +52,14 @@ public class RouletteView extends SurfaceView implements SurfaceHolder.Callback 
     private void init() {
         getHolder().addCallback(this);
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        items.addAll(List.of("전주", "강릉", "서울", "부산", "대구", "여수", "인천", "천안"));
+
+        // 도/광역시 단위 지역 이름 (9개)
+        items.addAll(List.of(
+                "전라북도", "강원도", "경기도", "경상남도", "경상북도",
+                "전라남도", "충청북도", "충청남도", "제주도"
+        ));
+
+        itemCount = items.size();
         sweepAngle = 360f / itemCount;
     }
 
@@ -84,7 +90,6 @@ public class RouletteView extends SurfaceView implements SurfaceHolder.Callback 
 
         canvas.drawColor(Color.WHITE);
 
-        // 캔버스를 회전시켜 룰렛 전체를 돌린다
         canvas.save();
         canvas.rotate(currentRotation, centerX, centerY);
 
@@ -94,9 +99,11 @@ public class RouletteView extends SurfaceView implements SurfaceHolder.Callback 
             paint.setColor(getColorByIndex(i));
             canvas.drawArc(rectF, currentDrawAngle, sweepAngle, true, paint);
 
-            // 텍스트 그리기
+            // 텍스트 스타일 설정
             paint.setColor(Color.BLACK);
             paint.setTextSize(40);
+            paint.setFakeBoldText(true);  // 글씨 굵게 설정
+
             float textAngle = currentDrawAngle + sweepAngle / 2;
             float textRadius = radius * 0.7f;
             float x = centerX + textRadius * (float) Math.cos(Math.toRadians(textAngle));
@@ -110,14 +117,10 @@ public class RouletteView extends SurfaceView implements SurfaceHolder.Callback 
             currentDrawAngle += sweepAngle;
         }
 
-        canvas.restore(); // 회전 해제
-
-        // 고정된 화살표 그리기
+        canvas.restore();
         drawArrow(canvas);
-
         surfaceHolder.unlockCanvasAndPost(canvas);
     }
-
 
     private void drawArrow(Canvas canvas) {
         paint.setColor(Color.BLACK);
@@ -140,8 +143,18 @@ public class RouletteView extends SurfaceView implements SurfaceHolder.Callback 
     }
 
     private int getColorByIndex(int index) {
-        int[] colors = {Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.CYAN, Color.MAGENTA, Color.LTGRAY, Color.DKGRAY};
-        return colors[index % colors.length];
+        int[] pastelColors = {
+                Color.rgb(255, 179, 186), // 연핑크
+                Color.rgb(255, 223, 186), // 살구
+                Color.rgb(255, 255, 186), // 연노랑
+                Color.rgb(186, 255, 201), // 연초록
+                Color.rgb(186, 225, 255), // 연하늘
+                Color.rgb(209, 196, 233), // 연보라
+                Color.rgb(255, 204, 229), // 핑크보라
+                Color.rgb(204, 255, 229), // 민트
+                Color.rgb(255, 240, 200)  // 베이지
+        };
+        return pastelColors[index % pastelColors.length];
     }
 
     private float getTextHeight(Paint paint) {
@@ -155,7 +168,7 @@ public class RouletteView extends SurfaceView implements SurfaceHolder.Callback 
 
         float startAngle = currentRotation % 360;
         Random random = new Random();
-        targetRotation = currentRotation + 360 * 5 + random.nextInt(360); // 5바퀴 + 랜덤
+        targetRotation = currentRotation + 360 * 5 + random.nextInt(360);
         animationStartTime = System.currentTimeMillis();
 
         new Thread(() -> {
@@ -168,7 +181,7 @@ public class RouletteView extends SurfaceView implements SurfaceHolder.Callback 
                 post(this::drawRoulette);
 
                 try {
-                    Thread.sleep(16); // 약 60fps
+                    Thread.sleep(16);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -189,14 +202,10 @@ public class RouletteView extends SurfaceView implements SurfaceHolder.Callback 
     private int getResultIndex(float rotation) {
         float normalizedRotation = (rotation % 360 + 360) % 360;
         float degreePerItem = 360f / itemCount;
-        float pointerAngle = 270f; // 12시 방향 (0도가 3시 방향이므로)
-
-        // 룰렛의 멈춘 각도를 기준으로 12시 방향이 가리키는 아이템 계산
+        float pointerAngle = 270f;
         float effectiveAngle = (pointerAngle - normalizedRotation + 360) % 360;
-        int index = (int) (effectiveAngle / degreePerItem);
-        return index;
+        return (int) (effectiveAngle / degreePerItem);
     }
-
 
     public interface OnRouletteResultListener {
         void onRouletteResult(String result);

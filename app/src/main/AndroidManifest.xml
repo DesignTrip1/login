@@ -50,7 +50,7 @@
         <activity
             android:name=".RouletteActivity"
             android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.DarkActionBar" />
+            android:theme="@style/Theme.AppCompat.Light" />
 
         <!-- 그룹 화면 -->
         <activity

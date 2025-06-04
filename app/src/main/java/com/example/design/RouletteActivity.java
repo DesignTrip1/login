@@ -21,7 +21,6 @@ public class RouletteActivity extends AppCompatActivity {
         rouletteView = findViewById(R.id.roulette);
         spinButton = findViewById(R.id.spin_button);
         resultText = findViewById(R.id.result_text);
-
         spinButton.setOnClickListener(v -> rouletteView.spin());
 
         rouletteView.setOnRouletteResultListener(result -> runOnUiThread(() -> showResultText(result)));
