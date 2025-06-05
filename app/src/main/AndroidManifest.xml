@@ -41,6 +41,11 @@
             android:exported="false"
             android:theme="@style/Theme.AppCompat.Light.DarkActionBar" />
 
+        <activity
+            android:name=".WritePostActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:exported="false" />
+
         <!-- 룰렛 화면 -->
         <activity
             android:name=".RouletteActivity"
@@ -57,7 +62,14 @@
         <activity
             android:name=".SignupActivity"
             android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.DarkActionBar" />
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <!-- 추천 여행지 슬라이드 전체화면 액티비티 -->
+        <activity
+            android:name=".FullscreenSliderActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
 
         <!-- 로그인 액티비티 -->
         <activity
