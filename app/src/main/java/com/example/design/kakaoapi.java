@@ -182,117 +182,117 @@ public class kakaoapi extends AppCompatActivity implements OnMapReadyCallback {
                 .setNegativeButton("아니오", null)
                 .show();
     }
-    // 상세 정보 + 사진 요청 및 다이얼로그 표시
-    private void fetchAndShowPlaceInfo(String placeId, LatLng latLng, boolean showSaveButton) {
-        if (placeId == null || placeId.isEmpty()) {
-            Toast.makeText(this, "Place ID가 없습니다.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        List<Place.Field> fields = Arrays.asList(
-                Place.Field.ID,
-                Place.Field.NAME,
-                Place.Field.ADDRESS,
-                Place.Field.PHONE_NUMBER,
-                Place.Field.RATING,
-                Place.Field.OPENING_HOURS,
-                Place.Field.PHOTO_METADATAS
-        );
-
-        FetchPlaceRequest request = FetchPlaceRequest.newInstance(placeId, fields);
-
-        placesClient.fetchPlace(request).addOnSuccessListener(response -> {
-            Place place = response.getPlace();
-
-            // 다이얼로그 뷰 설정
-            View dialogView = LayoutInflater.from(this).inflate(R.layout.map_place_info, null);
-            ImageView placeImageView = dialogView.findViewById(R.id.placeImageView);
-            TextView placeInfoTextView = dialogView.findViewById(R.id.placeInfoTextView);
-
-            // 텍스트 정보 구성
-            StringBuilder info = new StringBuilder();
-            info.append("이름: ").append(place.getName() != null ? place.getName() : "없음").append("\n")
-                    .append("주소: ").append(place.getAddress() != null ? place.getAddress() : "없음").append("\n")
-                    .append("전화번호: ").append(place.getPhoneNumber() != null ? place.getPhoneNumber() : "없음").append("\n")
-                    .append("평점: ").append(place.getRating() != null ? place.getRating() : "없음").append("\n");
-
-            if (place.getOpeningHours() != null) {
-                info.append("영업시간:\n");
-                for (String day : place.getOpeningHours().getWeekdayText()) {
-                    info.append("  ").append(day).append("\n");
+            // 상세 정보 + 사진 요청 및 다이얼로그 표시
+            private void fetchAndShowPlaceInfo(String placeId, LatLng latLng, boolean showSaveButton) {
+                if (placeId == null || placeId.isEmpty()) {
+                    Toast.makeText(this, "Place ID가 없습니다.", Toast.LENGTH_SHORT).show();
+                    return;
                 }
-            }
 
-            placeInfoTextView.setText(info.toString());
+                List<Place.Field> fields = Arrays.asList(
+                        Place.Field.ID,
+                        Place.Field.NAME,
+                        Place.Field.ADDRESS,
+                        Place.Field.PHONE_NUMBER,
+                        Place.Field.RATING,
+                        Place.Field.OPENING_HOURS,
+                        Place.Field.PHOTO_METADATAS
+                );
 
-            // 사진 처리
-            List<PhotoMetadata> photoMetadataList = place.getPhotoMetadatas();
-            if (photoMetadataList != null && !photoMetadataList.isEmpty()) {
-                PhotoMetadata photoMetadata = photoMetadataList.get(0);
-                FetchPhotoRequest photoRequest = FetchPhotoRequest.builder(photoMetadata)
-                        .setMaxWidth(600)
-                        .setMaxHeight(400)
-                        .build();
+                FetchPlaceRequest request = FetchPlaceRequest.newInstance(placeId, fields);
 
-                placesClient.fetchPhoto(photoRequest)
-                        .addOnSuccessListener(photoResponse -> {
-                            Bitmap bitmap = photoResponse.getBitmap();
-                            placeImageView.setImageBitmap(bitmap);
-                            placeImageView.setVisibility(View.VISIBLE);
-                        })
-                        .addOnFailureListener(e -> Log.e("PlacePhoto", "사진 로딩 실패", e));
-            } else {
-                placeImageView.setVisibility(View.GONE);
-            }
-// 다이얼로그 빌더 생성
-            AlertDialog.Builder builder = new AlertDialog.Builder(this)
-                    .setTitle("장소 정보")
-                    .setView(dialogView);
+                placesClient.fetchPlace(request).addOnSuccessListener(response -> {
+                    Place place = response.getPlace();
 
-            if (showSaveButton) {
-                builder.setPositiveButton("장소 저장", (dialog, which) -> {
-                    Marker marker = mMap.addMarker(new MarkerOptions()
-                            .position(latLng)
-                            .title(place.getName())
-                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+                    // 다이얼로그 뷰 설정
+                    View dialogView = LayoutInflater.from(this).inflate(R.layout.map_place_info, null);
+                    ImageView placeImageView = dialogView.findViewById(R.id.placeImageView);
+                    TextView placeInfoTextView = dialogView.findViewById(R.id.placeInfoTextView);
 
-                    if (marker != null) {
-                        markerList.add(marker); // 마커 리스트에 추가
-                    }
+                    // 텍스트 정보 구성
+                    StringBuilder info = new StringBuilder();
+                    info.append("이름: ").append(place.getName() != null ? place.getName() : "없음").append("\n")
+                            .append("주소: ").append(place.getAddress() != null ? place.getAddress() : "없음").append("\n")
+                            .append("전화번호: ").append(place.getPhoneNumber() != null ? place.getPhoneNumber() : "없음").append("\n")
+                            .append("평점: ").append(place.getRating() != null ? place.getRating() : "없음").append("\n");
 
-                    dbHelper.insertMarker(latLng.latitude, latLng.longitude, place.getName(), place.getId());
-                    adapter.updateMarkers(dbHelper.getAllMarkers());
-                    Toast.makeText(this, "장소가 저장되었습니다.", Toast.LENGTH_SHORT).show();
-                });
-                builder.setNegativeButton("취소", null);
-            } else {
-                builder.setPositiveButton("삭제", (dialog, which) -> {
-                    // DB에서 삭제
-                    dbHelper.deleteMarker(latLng.latitude, latLng.longitude);
-
-                    // 마커 리스트에서 제거
-                    Iterator<Marker> iterator = markerList.iterator();
-                    while (iterator.hasNext()) {
-                        Marker m = iterator.next();
-                        if (m.getPosition().equals(latLng)) {
-                            m.remove();
-                            iterator.remove();
-                            break;
+                    if (place.getOpeningHours() != null) {
+                        info.append("영업시간:\n");
+                        for (String day : place.getOpeningHours().getWeekdayText()) {
+                            info.append("  ").append(day).append("\n");
                         }
                     }
 
-                    adapter.updateMarkers(dbHelper.getAllMarkers());
-                    Toast.makeText(this, "마커가 삭제되었습니다.", Toast.LENGTH_SHORT).show();
-                });
-                builder.setNegativeButton("닫기", null);
-            }
-            builder.show();
+                    placeInfoTextView.setText(info.toString());
 
-        }).addOnFailureListener(e -> {
-            Log.e("PlaceFetch", "장소 정보 가져오기 실패", e);
-            Toast.makeText(this, "장소 정보를 가져오지 못했습니다.", Toast.LENGTH_SHORT).show();
-        });
-    }
+                    // 사진 처리
+                    List<PhotoMetadata> photoMetadataList = place.getPhotoMetadatas();
+                    if (photoMetadataList != null && !photoMetadataList.isEmpty()) {
+                        PhotoMetadata photoMetadata = photoMetadataList.get(0);
+                        FetchPhotoRequest photoRequest = FetchPhotoRequest.builder(photoMetadata)
+                                .setMaxWidth(600)
+                                .setMaxHeight(400)
+                                .build();
+
+                        placesClient.fetchPhoto(photoRequest)
+                                .addOnSuccessListener(photoResponse -> {
+                                    Bitmap bitmap = photoResponse.getBitmap();
+                                    placeImageView.setImageBitmap(bitmap);
+                                    placeImageView.setVisibility(View.VISIBLE);
+                                })
+                                .addOnFailureListener(e -> Log.e("PlacePhoto", "사진 로딩 실패", e));
+                    } else {
+                        placeImageView.setVisibility(View.GONE);
+                    }
+// 다이얼로그 빌더 생성
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                            .setTitle("장소 정보")
+                            .setView(dialogView);
+
+                    if (showSaveButton) {
+                        builder.setPositiveButton("장소 저장", (dialog, which) -> {
+                            Marker marker = mMap.addMarker(new MarkerOptions()
+                                    .position(latLng)
+                                    .title(place.getName())
+                                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+
+                            if (marker != null) {
+                                markerList.add(marker); // 마커 리스트에 추가
+                            }
+
+                            dbHelper.insertMarker(latLng.latitude, latLng.longitude, place.getName(), place.getId());
+                            adapter.updateMarkers(dbHelper.getAllMarkers());
+                            Toast.makeText(this, "장소가 저장되었습니다.", Toast.LENGTH_SHORT).show();
+                        });
+                        builder.setNegativeButton("취소", null);
+                    } else {
+                        builder.setPositiveButton("삭제", (dialog, which) -> {
+                            // DB에서 삭제
+                            dbHelper.deleteMarker(latLng.latitude, latLng.longitude);
+
+                            // 마커 리스트에서 제거
+                            Iterator<Marker> iterator = markerList.iterator();
+                            while (iterator.hasNext()) {
+                                Marker m = iterator.next();
+                                if (m.getPosition().equals(latLng)) {
+                                    m.remove();
+                                    iterator.remove();
+                                    break;
+                                }
+                            }
+
+                            adapter.updateMarkers(dbHelper.getAllMarkers());
+                            Toast.makeText(this, "마커가 삭제되었습니다.", Toast.LENGTH_SHORT).show();
+                        });
+                        builder.setNegativeButton("닫기", null);
+                    }
+                builder.show();
+
+                }).addOnFailureListener(e -> {
+                    Log.e("PlaceFetch", "장소 정보 가져오기 실패", e);
+                    Toast.makeText(this, "장소 정보를 가져오지 못했습니다.", Toast.LENGTH_SHORT).show();
+                });
+            }
 
     private void showCurrentLocation() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
