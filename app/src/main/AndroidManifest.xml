@@ -24,11 +24,6 @@
             android:exported="false"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
-        <!-- 지도 액티비티 (툴바 포함) -->
-        <activity
-            android:name=".MapActivity"
-            android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.DarkActionBar" />
         <activity android:name=".kakaoapi"/>
 
         <!-- 여행 일정 화면 (일정 추가) -->

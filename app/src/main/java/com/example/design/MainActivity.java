@@ -49,20 +49,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-<<<<<<< HEAD
-        // 지도 버튼
-        Button btnOpenMap = findViewById(R.id.btnOpenMap);
-        btnOpenMap.setOnClickListener(v -> {
-<<<<<<< HEAD
-=======
         // 지도 이미지 클릭 시 지도 액티비티 실행
         ImageView imgMap = findViewById(R.id.imgMap);
         imgMap.setOnClickListener(v -> {
->>>>>>> origin/main
             Intent intent = new Intent(MainActivity.this, kakaoapi.class);
-=======
-            Intent intent = new Intent(MainActivity.this, MapActivity.class);
->>>>>>> origin/main
             startActivity(intent);
         });
 
