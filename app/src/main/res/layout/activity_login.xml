@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="#ffffff"
     android:theme="@style/ThemeOverlay.Vellog_login.FullscreenContainer"
-    tools:context=".LoginActivity">
+    tools:context=".login.LoginActivity">
 
 
     <LinearLayout

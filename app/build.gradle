@@ -53,4 +53,6 @@ dependencies {
 
     implementation 'androidx.viewpager2:viewpager2:1.0.0'
     implementation 'com.tbuonomo:dotsindicator:4.3' // 인디케이터 점 라이브러리
+
+    implementation 'androidx.cardview:cardview:1.0.0'  // 여기에 추가
 }

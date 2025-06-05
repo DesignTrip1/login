@@ -2,13 +2,16 @@ package com.example.design;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
+
+import com.example.design.community.CommunityActivity;
+import com.example.design.recommend.SliderAdapter;
+import com.example.design.roulette.RouletteActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,10 +27,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 슬라이드 이미지 리스트
+        // 뷰 연결
         viewPager = findViewById(R.id.viewPager);
         indicatorLayout = findViewById(R.id.indicatorLayout);
 
+        // 추천 여행지 이미지 리스트
         List<Integer> imageList = new ArrayList<>();
         imageList.add(R.drawable.jeju);
         imageList.add(R.drawable.busan);
@@ -36,7 +40,6 @@ public class MainActivity extends AppCompatActivity {
         sliderAdapter = new SliderAdapter(this, imageList);
         viewPager.setAdapter(sliderAdapter);
 
-        // 점 Indicator 셋업
         setupIndicators(imageList.size());
 
         viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
@@ -46,10 +49,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+<<<<<<< HEAD
         // 지도 버튼
         Button btnOpenMap = findViewById(R.id.btnOpenMap);
         btnOpenMap.setOnClickListener(v -> {
 <<<<<<< HEAD
+=======
+        // 지도 이미지 클릭 시 지도 액티비티 실행
+        ImageView imgMap = findViewById(R.id.imgMap);
+        imgMap.setOnClickListener(v -> {
+>>>>>>> origin/main
             Intent intent = new Intent(MainActivity.this, kakaoapi.class);
 =======
             Intent intent = new Intent(MainActivity.this, MapActivity.class);
@@ -57,13 +66,13 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // 아이콘 버튼
+        // 아이콘 버튼들
         ImageButton btnPlan = findViewById(R.id.btnPlan);
         ImageButton btnCommunity = findViewById(R.id.btnCommunity);
         ImageButton btnRoulette = findViewById(R.id.btnRoulette);
         ImageButton btnGroup = findViewById(R.id.btnGroup);
 
-        btnPlan.setOnClickListener(v -> startActivity(new Intent(this, AddScheduleActivity.class)));
+        btnPlan.setOnClickListener(v -> startActivity(new Intent(this, PlanActivity.class)));
         btnCommunity.setOnClickListener(v -> startActivity(new Intent(this, CommunityActivity.class)));
         btnRoulette.setOnClickListener(v -> startActivity(new Intent(this, RouletteActivity.class)));
         btnGroup.setOnClickListener(v -> startActivity(new Intent(this, GroupActivity.class)));
@@ -100,4 +109,4 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-}//
+}
