@@ -49,7 +49,11 @@ public class MainActivity extends AppCompatActivity {
         // 지도 버튼
         Button btnOpenMap = findViewById(R.id.btnOpenMap);
         btnOpenMap.setOnClickListener(v -> {
+<<<<<<< HEAD
             Intent intent = new Intent(MainActivity.this, kakaoapi.class);
+=======
+            Intent intent = new Intent(MainActivity.this, MapActivity.class);
+>>>>>>> origin/main
             startActivity(intent);
         });
 
