@@ -1,14 +1,17 @@
-package com.example.design;
+package com.example.design.schedule;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageButton;
-import androidx.annotation.NonNull;
+import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.design.detail.DetailScheduleActivity;
+import com.example.design.R;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +21,8 @@ public class PlanActivity extends AppCompatActivity {
     private PlanAdapter adapter;
     private List<PlanItem> planList;
     private static final int REQUEST_CODE_ADD_PLAN = 1001;
+
+    private TextView emptyMessage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +38,12 @@ public class PlanActivity extends AppCompatActivity {
             startActivityForResult(intent, REQUEST_CODE_ADD_PLAN);
         });
 
+        emptyMessage = findViewById(R.id.emptyMessage);
+        emptyMessage.setOnClickListener(v -> {
+            Intent intent = new Intent(this, AddScheduleActivity.class);
+            startActivityForResult(intent, REQUEST_CODE_ADD_PLAN);
+        });
+
         recyclerView = findViewById(R.id.recyclerPlan);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
@@ -40,12 +51,28 @@ public class PlanActivity extends AppCompatActivity {
         adapter = new PlanAdapter(planList);
         recyclerView.setAdapter(adapter);
 
-        // ✅ 일정 항목 클릭 시 DetailScheduleActivity 로 이동
         adapter.setOnItemClickListener(position -> {
+            PlanItem selectedPlan = planList.get(position);
+            String period = selectedPlan.getPeriod(); // 예: "2025-06-10 ~ 2025-06-12"
+
+            // 시작일과 종료일 분리
+            String[] dates = period.split(" ~ ");
+            String startDate = dates[0];
+            String endDate = dates[1];
+
             Intent intent = new Intent(PlanActivity.this, DetailScheduleActivity.class);
-            // 나중에 plan ID 등 넘길 수 있음
+            intent.putExtra("startDate", startDate);
+            intent.putExtra("endDate", endDate);
             startActivity(intent);
         });
+
+        adapter.setOnDeleteConfirmedListener(position -> {
+            planList.remove(position);
+            adapter.notifyItemRemoved(position);
+            updateEmptyMessageVisibility();
+        });
+
+        updateEmptyMessageVisibility();
     }
 
     @Override
@@ -57,8 +84,19 @@ public class PlanActivity extends AppCompatActivity {
             String endDate = data.getStringExtra("endDate");
 
             String date = startDate + " ~ " + endDate;
-            planList.add(new PlanItem(title, date));
+            planList.add(new PlanItem(title, startDate, endDate));
             adapter.notifyItemInserted(planList.size() - 1);
+            updateEmptyMessageVisibility();
+        }
+    }
+
+    private void updateEmptyMessageVisibility() {
+        if (planList.isEmpty()) {
+            emptyMessage.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);  // 👈 추가!
+        } else {
+            emptyMessage.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);  // 👈 추가!
         }
     }
 }

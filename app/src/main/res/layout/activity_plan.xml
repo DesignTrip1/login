@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- ← 뒤로가기 버튼 -->
+    <!-- 뒤로가기 버튼 -->
     <ImageButton
         android:id="@+id/btnBack"
         android:layout_width="40dp"
@@ -33,12 +33,29 @@
         android:layout_marginEnd="16dp"
         android:layout_marginTop="16dp" />
 
-    <!-- 리사이클러뷰 -->
+    <!-- 중앙 텍스트 버튼 -->
+    <TextView
+        android:id="@+id/emptyMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="일정을 추가하세요."
+        android:textSize="16sp"
+        android:textColor="@android:color/holo_blue_light"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/btnBack"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.5" />
+
+    <!-- 리사이클러뷰 (일정 리스트는 항상 위쪽 정렬) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerPlan"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:padding="16dp"
+        android:visibility="visible"
         app:layout_constraintTop_toBottomOf="@id/btnBack"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
