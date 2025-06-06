@@ -1,4 +1,4 @@
-package com.example.design;
+package com.example.design.schedule;
 
 public class PlanItem {
     private String title;

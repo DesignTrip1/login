@@ -1,4 +1,4 @@
-package com.example.design;
+package com.example.design.schedule;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;

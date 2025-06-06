@@ -1,4 +1,4 @@
-package com.example.design;
+package com.example.design.schedule;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
@@ -9,6 +9,9 @@ import android.widget.Spinner;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.design.R;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;

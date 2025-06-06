@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_margin="8dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:elevation="4dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <!-- 시간 -->
+        <TextView
+            android:id="@+id/txtTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="시간"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_alignParentStart="true" />
+
+        <!-- 장소 -->
+        <TextView
+            android:id="@+id/txtPlace"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="장소"
+            android:textSize="14sp"
+            android:layout_below="@id/txtTime"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="4dp" />
+
+        <!-- 메모 -->
+        <TextView
+            android:id="@+id/txtMemo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="메모"
+            android:textSize="14sp"
+            android:layout_below="@id/txtPlace"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="4dp" />
+
+        <!-- 수정 버튼 -->
+        <ImageButton
+            android:id="@+id/btnEdit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_menu_edit"
+            android:background="@null"
+            android:contentDescription="수정"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:tint="@android:color/black" />
+
+        <!-- 삭제 버튼 -->
+        <ImageButton
+            android:id="@+id/btnDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_menu_delete"
+            android:background="@null"
+            android:contentDescription="삭제"
+            android:layout_below="@id/btnEdit"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="8dp"
+            android:tint="@android:color/black" />
+    </RelativeLayout>
+
+</androidx.cardview.widget.CardView>
