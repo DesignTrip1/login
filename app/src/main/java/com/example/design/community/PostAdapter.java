@@ -40,14 +40,22 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         holder.contentText.setText(post.getContent());
         holder.likeCountText.setText(String.valueOf(post.getLikeCount()));
 
-        // 댓글 버튼 클릭 → 댓글 화면으로 이동
+        // 🔹 게시글 클릭 시 상세화면으로 이동
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(context, PostDetailActivity.class);
+            intent.putExtra("title", post.getTitle());
+            intent.putExtra("content", post.getContent());
+            context.startActivity(intent);
+        });
+
+        // 🔹 댓글 버튼 클릭
         holder.commentButton.setOnClickListener(v -> {
             Intent intent = new Intent(context, CommentActivity.class);
             intent.putExtra("postIndex", post.getId());
             context.startActivity(intent);
         });
 
-        // 좋아요 버튼 클릭
+        // 🔹 좋아요 버튼 클릭
         holder.likeButton.setOnClickListener(v -> {
             String userId = "device_user"; // 로그인 기능 없으면 임시 ID
 
@@ -76,9 +84,9 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
         public PostViewHolder(@NonNull View itemView) {
             super(itemView);
-            titleText = itemView.findViewById(R.id.textViewTitle);   // ✅ 수정
-            contentText = itemView.findViewById(R.id.textViewContent); // ✅ 수정
-            likeCountText = itemView.findViewById(R.id.likeCountText); // ✅ 수정
+            titleText = itemView.findViewById(R.id.textViewTitle);
+            contentText = itemView.findViewById(R.id.textViewContent);
+            likeCountText = itemView.findViewById(R.id.likeCountText);
             commentButton = itemView.findViewById(R.id.btnComment);
             likeButton = itemView.findViewById(R.id.btnLike);
         }
