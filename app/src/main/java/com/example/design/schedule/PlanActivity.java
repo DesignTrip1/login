@@ -82,9 +82,10 @@ public class PlanActivity extends AppCompatActivity {
             String title = data.getStringExtra("title");
             String startDate = data.getStringExtra("startDate");
             String endDate = data.getStringExtra("endDate");
+            String groupName = data.getStringExtra("groupName");  // ✅ 추가
 
             String date = startDate + " ~ " + endDate;
-            planList.add(new PlanItem(title, startDate, endDate));
+            planList.add(new PlanItem(title, startDate, endDate, groupName));
             adapter.notifyItemInserted(planList.size() - 1);
             updateEmptyMessageVisibility();
         }

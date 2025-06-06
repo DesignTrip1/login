@@ -125,6 +125,8 @@ public class GroupActivity extends AppCompatActivity {
                     String groupName = inputGroupName.getText().toString().trim();
                     if (!groupName.isEmpty() && !groupList.contains(groupName)) {
                         groupList.add(groupName);
+
+                        // ✅ 그룹 구성원 저장
                         Set<String> selectedMembers = new HashSet<>();
                         for (CheckBox cb : checkBoxes) {
                             if (cb.isChecked()) {
@@ -133,6 +135,10 @@ public class GroupActivity extends AppCompatActivity {
                         }
 
                         groupMembers.put(groupName, selectedMembers);
+
+                        // ✅ 추가 → GroupManager 에도 그룹 저장 (AddScheduleActivity 쪽에서 사용할 수 있도록)
+                        GroupManager.getInstance().addGroup(groupName);
+
                         addGroupView(groupName);
                         updateGroupHeader();
                     }
