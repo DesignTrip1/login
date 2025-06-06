@@ -40,7 +40,7 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         holder.contentText.setText(post.getContent());
         holder.likeCountText.setText(String.valueOf(post.getLikeCount()));
 
-        // 🔹 게시글 클릭 시 상세화면으로 이동
+        // 🔹 게시글 클릭 시 상세화면으로 이동.
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(context, PostDetailActivity.class);
             intent.putExtra("title", post.getTitle());
