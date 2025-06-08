@@ -1,4 +1,4 @@
-package com.example.design;
+package com.example.design.detail;
 
 public class DetailItem {
     public String day, time, place, memo;

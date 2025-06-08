@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp">
+
+    <!-- 시작 시간 -->
+    <EditText
+        android:id="@+id/editStartTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="시작 시간 (예: 09:00)"
+        android:inputType="time"
+        android:padding="8dp"
+        android:background="@android:drawable/edit_text"
+        android:layout_marginBottom="12dp"/>
+
+    <!-- 종료 시간 -->
+    <EditText
+        android:id="@+id/editEndTime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="종료 시간 (예: 18:00)"
+        android:inputType="time"
+        android:padding="8dp"
+        android:background="@android:drawable/edit_text"
+        android:layout_marginBottom="12dp"/>
+
+    <!-- 장소 -->
+    <EditText
+        android:id="@+id/editPlace"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="장소"
+        android:inputType="text"
+        android:padding="8dp"
+        android:background="@android:drawable/edit_text"
+        android:layout_marginBottom="12dp"/>
+
+    <!-- 메모 -->
+    <EditText
+        android:id="@+id/editMemo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="메모"
+        android:inputType="text"
+        android:padding="8dp"
+        android:background="@android:drawable/edit_text"/>
+
+</LinearLayout>

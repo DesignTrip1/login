@@ -1,4 +1,4 @@
-package com.example.design;
+package com.example.design.schedule;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,6 +8,10 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.design.detail.DetailScheduleActivity;
+import com.example.design.R;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,9 +82,10 @@ public class PlanActivity extends AppCompatActivity {
             String title = data.getStringExtra("title");
             String startDate = data.getStringExtra("startDate");
             String endDate = data.getStringExtra("endDate");
+            String groupName = data.getStringExtra("groupName");  // ✅ 추가
 
             String date = startDate + " ~ " + endDate;
-            planList.add(new PlanItem(title, startDate, endDate));
+            planList.add(new PlanItem(title, startDate, endDate, groupName));
             adapter.notifyItemInserted(planList.size() - 1);
             updateEmptyMessageVisibility();
         }

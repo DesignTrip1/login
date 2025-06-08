@@ -1,6 +1,8 @@
 package com.example.design.recommend;
 
 import android.os.Bundle;
+import android.view.View;
+import android.view.WindowManager;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
@@ -20,11 +22,27 @@ public class FullscreenSliderActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // 상태바까지 숨기는 전체화면 설정
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
         setContentView(R.layout.activity_fullscreen_slider);
+
+        // 시스템 UI 숨기기 (네비게이션 바, 상태바 포함)
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_IMMERSIVE
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        );
 
         viewPager = findViewById(R.id.fullscreenViewPager);
 
-        // 이미지 추가 예시
+        // 이미지 추가
         jejuImages.add(R.drawable.jeju);
         jejuImages.add(R.drawable.jeju1);
         jejuImages.add(R.drawable.jeju2);

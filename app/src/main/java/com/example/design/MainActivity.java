@@ -10,8 +10,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.design.community.CommunityActivity;
+import com.example.design.group.GroupActivity;
 import com.example.design.recommend.SliderAdapter;
 import com.example.design.roulette.RouletteActivity;
+import com.example.design.schedule.PlanActivity;
 
 import java.util.ArrayList;
 import java.util.List;

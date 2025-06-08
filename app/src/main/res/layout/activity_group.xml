@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layoutRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="24dp">
 
-    <!-- 상단 바: 뒤로가기 + 그룹 타이틀 -->
+    <!-- 상단 바: 뒤로가기 + 그룹 타이틀 + 친구추가 버튼 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -22,17 +23,49 @@
             android:background="@null"
             android:contentDescription="뒤로가기" />
 
-        <!-- 오른쪽에 그룹 텍스트 -->
+        <!-- 가운데 그룹 텍스트 -->
         <TextView
             android:id="@+id/textGroupTitle"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="그룹"
             android:textSize="20sp"
-            android:layout_marginStart="16dp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:layout_weight="1"
+            android:gravity="center" />
+
+        <!-- 친구 추가 버튼 -->
+        <ImageButton
+            android:id="@+id/btnAddFriend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/bt_addfd"
+            android:background="@null"
+            android:contentDescription="친구 추가" />
     </LinearLayout>
 
+    <!-- 그룹 생성 버튼 -->
+    <Button
+        android:id="@+id/btnCreateGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="그룹 생성"
+        android:textStyle="bold"
+        android:layout_marginBottom="24dp" />
 
+    <!-- 그룹 목록 -->
+    <LinearLayout
+        android:id="@+id/layoutGroups"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="24dp" />
+
+    <!-- 친구 목록 -->
+    <LinearLayout
+        android:id="@+id/layoutFriends"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
 
 </LinearLayout>
