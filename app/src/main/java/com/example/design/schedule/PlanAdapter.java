@@ -51,7 +51,7 @@ public class PlanAdapter extends RecyclerView.Adapter<PlanAdapter.PlanViewHolder
         PlanItem plan = planList.get(position);
         holder.txtTitle.setText(plan.getTitle());
         holder.txtPeriod.setText(plan.getPeriod());
-        holder.txtGroup.setText("그룹: " + plan.getGroupName());  // ✅ 그룹명 표시
+        holder.txtGroup.setText(plan.getGroupName());
     }
 
     @Override
@@ -67,7 +67,7 @@ public class PlanAdapter extends RecyclerView.Adapter<PlanAdapter.PlanViewHolder
             super(itemView);
             txtTitle = itemView.findViewById(R.id.txtPlanTitle);
             txtPeriod = itemView.findViewById(R.id.txtPlanPeriod);
-            txtGroup = itemView.findViewById(R.id.txtPlanGroup);  // ✅ 그룹명 TextView 추가 (item_plan.xml 에 추가 필요!)
+            txtGroup = itemView.findViewById(R.id.txtPlanGroup);
 
             btnDelete = itemView.findViewById(R.id.btnDelete);
             btnDelete.setColorFilter(null); // tint 제거

@@ -11,31 +11,6 @@
         android:gravity="center_horizontal"
         android:baselineAligned="false">
 
-        <!-- 대한민국 지역 선택 -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="여행 지역 선택"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
-
-        <!-- 도 선택 -->
-        <Spinner
-            android:id="@+id/spinnerProvince"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginBottom="24dp"
-            android:padding="12dp" />
-
-        <!-- 시/군/구 선택 -->
-        <Spinner
-            android:id="@+id/spinnerCity"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginBottom="32dp"
-            android:padding="12dp" />
-
         <!-- 여행 기간 선택 -->
         <TextView
             android:layout_width="wrap_content"
