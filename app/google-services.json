@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1070229137923",
+    "project_id": "designtrip-68ced",
+    "storage_bucket": "designtrip-68ced.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1070229137923:android:20e0188166438414113c36",
+        "android_client_info": {
+          "package_name": "com.example.design"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBFFCX9ElyhmmjvG5168ANRby9FKNn2OD8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -47,6 +48,7 @@ dependencies {
     implementation libs.navigation.fragment
     implementation libs.navigation.ui
     implementation libs.activity
+    implementation libs.firebase.firestore
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
@@ -55,4 +57,7 @@ dependencies {
     implementation 'com.tbuonomo:dotsindicator:4.3' // 인디케이터 점 라이브러리
 
     implementation 'androidx.cardview:cardview:1.0.0'  // 여기에 추가
+    implementation 'com.google.firebase:firebase-auth:22.3.1'  // 최신 버전 기준 (2025년 기준)
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+
 }
