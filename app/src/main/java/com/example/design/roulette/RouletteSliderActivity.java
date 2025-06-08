@@ -26,40 +26,49 @@ public class RouletteSliderActivity extends AppCompatActivity {
         if (region != null) {
             switch (region) {
                 case "전라북도":
-                    imageList.add(R.drawable.jeonju);
-                    imageList.add(R.drawable.jeonju1);
+                    imageList.add(R.drawable.jb1);
+                    imageList.add(R.drawable.jb2);
+                    imageList.add(R.drawable.jb3);
                     break;
                 case "제주도":
-                    imageList.add(R.drawable.jeju);
-                    imageList.add(R.drawable.jeju1);
+                    imageList.add(R.drawable.jj1);
+                    imageList.add(R.drawable.jj2);
+                    imageList.add(R.drawable.jj3);
                     break;
                 case "경상북도":
-                    imageList.add(R.drawable.busan);
-                    imageList.add(R.drawable.busan1);
+                    imageList.add(R.drawable.gb1);
+                    imageList.add(R.drawable.gb2);
+                    imageList.add(R.drawable.gb3);
                     break;
                 case "경상남도":
-                    imageList.add(R.drawable.busan);
-                    imageList.add(R.drawable.busan1);
+                    imageList.add(R.drawable.gn1);
+                    imageList.add(R.drawable.gn2);
+                    imageList.add(R.drawable.gn3);
                     break;
                 case "충청남도":
-                    imageList.add(R.drawable.jeonju);
-                    imageList.add(R.drawable.jeonju1);
+                    imageList.add(R.drawable.cn1);
+                    imageList.add(R.drawable.cn2);
+                    imageList.add(R.drawable.cn3);
                     break;
                 case "충청북도":
-                    imageList.add(R.drawable.jeonju);
-                    imageList.add(R.drawable.jeonju1);
+                    imageList.add(R.drawable.cb1);
+                    imageList.add(R.drawable.cb2);
+                    imageList.add(R.drawable.cb3);
                     break;
                 case "전라남도":
-                    imageList.add(R.drawable.jeonju);
-                    imageList.add(R.drawable.jeonju1);
+                    imageList.add(R.drawable.jn1);
+                    imageList.add(R.drawable.jn2);
+                    imageList.add(R.drawable.jn3);
                     break;
                 case "경기도":
-                    imageList.add(R.drawable.busan);
-                    imageList.add(R.drawable.busan1);
+                    imageList.add(R.drawable.gg1);
+                    imageList.add(R.drawable.gg2);
+                    imageList.add(R.drawable.gg3);
                     break;
                 case "강원도":
-                    imageList.add(R.drawable.busan);
-                    imageList.add(R.drawable.busan1);
+                    imageList.add(R.drawable.gy1);
+                    imageList.add(R.drawable.gy2);
+                    imageList.add(R.drawable.gy3);
                     break;
                 default:
                     imageList.add(R.drawable.jeju);  // fallback
