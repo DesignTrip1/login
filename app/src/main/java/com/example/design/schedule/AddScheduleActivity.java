@@ -11,19 +11,16 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.design.R;
-import com.example.design.group.GroupManager;
 
 import java.util.Calendar;
-import java.util.List;
 
 public class AddScheduleActivity extends AppCompatActivity {
 
-    private Button btnStartDate, btnEndDate, btnNext, btnSelectGroup;
+    private Button btnStartDate, btnEndDate, btnNext;
     private EditText editTitle;
 
     private String selectedStartDate = "";
     private String selectedEndDate = "";
-    private String selectedGroup = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,13 +30,10 @@ public class AddScheduleActivity extends AppCompatActivity {
         btnStartDate = findViewById(R.id.btnStartDate);
         btnEndDate = findViewById(R.id.btnEndDate);
         btnNext = findViewById(R.id.btnNext);
-        btnSelectGroup = findViewById(R.id.btnSelectGroup);
         editTitle = findViewById(R.id.editTitle);
 
         btnStartDate.setOnClickListener(v -> showDatePicker(true));
         btnEndDate.setOnClickListener(v -> showDatePicker(false));
-
-        btnSelectGroup.setOnClickListener(v -> showGroupSelectDialog());
 
         btnNext.setOnClickListener(v -> {
             String title = editTitle.getText().toString().trim();
@@ -52,7 +46,6 @@ public class AddScheduleActivity extends AppCompatActivity {
             resultIntent.putExtra("title", title);
             resultIntent.putExtra("startDate", selectedStartDate);
             resultIntent.putExtra("endDate", selectedEndDate);
-            resultIntent.putExtra("groupName", selectedGroup);  // ✅ 선택한 그룹명도 넘김
             setResult(RESULT_OK, resultIntent);
             finish();
         });
@@ -75,27 +68,5 @@ public class AddScheduleActivity extends AppCompatActivity {
                 calendar.get(Calendar.MONTH),
                 calendar.get(Calendar.DAY_OF_MONTH)
         ).show();
-    }
-
-    // 그룹 선택 다이얼로그
-    private void showGroupSelectDialog() {
-        List<String> groupList = GroupManager.getInstance().getGroupList();
-
-        if (groupList.isEmpty()) {
-            new AlertDialog.Builder(this)
-                    .setTitle("그룹 선택")
-                    .setMessage("생성된 그룹이 없습니다.")
-                    .setPositiveButton("확인", null)
-                    .show();
-        } else {
-            String[] groupArray = groupList.toArray(new String[0]);
-            new AlertDialog.Builder(this)
-                    .setTitle("그룹 선택")
-                    .setItems(groupArray, (dialog, which) -> {
-                        selectedGroup = groupArray[which];
-                        btnSelectGroup.setText(selectedGroup); // 선택한 그룹 표시
-                    })
-                    .show();
-        }
     }
 }

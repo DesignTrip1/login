@@ -59,14 +59,6 @@
             android:padding="12dp"
             android:layout_marginBottom="32dp" />
 
-        <!-- 그룹 선택 -->
-        <Button
-            android:id="@+id/btnSelectGroup"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="그룹 선택"
-            android:layout_marginTop="16dp" />
-
         <!-- 다음으로 -->
         <Button
             android:id="@+id/btnNext"
