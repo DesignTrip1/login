@@ -82,8 +82,8 @@
         <!-- 추천 여행지 슬라이드 전체화면 액티비티 -->
         <activity
             android:name=".recommend.FullscreenSliderActivity"
-            android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+            android:theme="@style/Theme.Design.FullscreenBlack" />
+
 
         <!-- 로그인 액티비티 -->
         <activity

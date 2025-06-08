@@ -2,6 +2,7 @@ package com.example.design.recommend;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,10 +37,14 @@ public class SliderAdapter extends RecyclerView.Adapter<SliderAdapter.SliderView
         int imageResId = imageList.get(position);
         holder.imageView.setImageResource(imageResId);
 
-        // 🔽 이미지 클릭 시 해당 여행지 전체화면 슬라이드 액티비티로 이동
+        // ✅ 이미지 비율 유지 + 배경 검정 + 짤림 방지
+        holder.imageView.setScaleType(ImageView.ScaleType.FIT_CENTER); // 비율 유지하면서 화면에 맞춤
+        holder.imageView.setBackgroundColor(Color.WHITE); // 여백은 검정색
+
+        // 🔽 클릭 시 전체화면 슬라이더로 이동 (선택사항)
         holder.imageView.setOnClickListener(v -> {
             Intent intent = new Intent(context, FullscreenSliderActivity.class);
-            intent.putExtra("imageType", position);  // 클릭한 이미지 인덱스 전달
+            intent.putExtra("imageType", position);  // 선택된 이미지 위치
             context.startActivity(intent);
         });
     }
@@ -54,7 +59,7 @@ public class SliderAdapter extends RecyclerView.Adapter<SliderAdapter.SliderView
 
         public SliderViewHolder(@NonNull View itemView) {
             super(itemView);
-            imageView = itemView.findViewById(R.id.imageSlide); // item_slide.xml 안의 ImageView ID
+            imageView = itemView.findViewById(R.id.imageSlide);
         }
     }
 }
