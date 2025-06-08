@@ -1,71 +1,125 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/layoutRoot"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scrollView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:background="#FFFFFF">
 
-    <!-- 상단 바: 뒤로가기 + 그룹 타이틀 + 친구추가 버튼 -->
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="16dp">
-
-        <!-- 뒤로가기 버튼 -->
-        <ImageButton
-            android:id="@+id/btnBack"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/bt_back"
-            android:background="@null"
-            android:contentDescription="뒤로가기" />
-
-        <!-- 가운데 그룹 텍스트 -->
-        <TextView
-            android:id="@+id/textGroupTitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="그룹"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_weight="1"
-            android:gravity="center" />
-
-        <!-- 친구 추가 버튼 -->
-        <ImageButton
-            android:id="@+id/btnAddFriend"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/bt_addfd"
-            android:background="@null"
-            android:contentDescription="친구 추가" />
-    </LinearLayout>
-
-    <!-- 그룹 생성 버튼 -->
-    <Button
-        android:id="@+id/btnCreateGroup"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="그룹 생성"
-        android:textStyle="bold"
-        android:layout_marginBottom="24dp" />
-
-    <!-- 그룹 목록 -->
-    <LinearLayout
-        android:id="@+id/layoutGroups"
+        android:id="@+id/rootLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_marginBottom="24dp" />
+        android:padding="16dp">
 
-    <!-- 친구 목록 -->
-    <LinearLayout
-        android:id="@+id/layoutFriends"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical" />
+        <!-- 상단 바 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
 
-</LinearLayout>
+            <!-- 뒤로가기 -->
+            <ImageButton
+                android:id="@+id/btnBack"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/bt_back"
+                android:background="@null"
+                android:contentDescription="뒤로가기 버튼" />
+
+            <!-- 타이틀 -->
+            <TextView
+                android:id="@+id/textGroupTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="그룹"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+
+            <!-- 친구 추가 -->
+            <ImageButton
+                android:id="@+id/btnAddFriend"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/bt_addfd"
+                android:background="@null"
+                android:contentDescription="친구 추가 버튼" />
+        </LinearLayout>
+
+        <!-- 그룹 생성 -->
+        <Button
+            android:id="@+id/btnCreateGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="그룹 생성"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 그룹 목록 헤더 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📁 그룹 목록"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/layoutGroups"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 친구 목록 헤더 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="👥 친구 목록"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/layoutFriends"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 친구 요청 헤더 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📨 친구 요청"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/layoutFriendRequests"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 그룹 초대 목록 섹션 -->
+        <LinearLayout
+            android:id="@+id/layoutInvitations"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="24dp" />
+
+        <LinearLayout
+            android:id="@+id/layoutGroupJoinRequests"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+    </LinearLayout>
+</ScrollView>

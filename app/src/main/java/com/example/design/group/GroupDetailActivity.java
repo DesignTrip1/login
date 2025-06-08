@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
@@ -17,6 +18,7 @@ import java.util.Set;
 
 public class GroupDetailActivity extends AppCompatActivity {
 
+    private String groupId; // <-- 그룹 ID 추가 (삭제에 필요)
     private String groupName;
     private List<String> memberList;
 
@@ -26,10 +28,15 @@ public class GroupDetailActivity extends AppCompatActivity {
     private Button btnEditMembers;
     private Button btnDeleteGroup;
 
+    private GroupRepository groupRepository; // <-- GroupRepository 추가
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group_detail);
+
+        // GroupRepository 초기화
+        groupRepository = new GroupRepository(this); // <-- 이 부분 추가
 
         textGroupName = findViewById(R.id.textGroupName);
         layoutMembers = findViewById(R.id.layoutMembers);
@@ -37,10 +44,18 @@ public class GroupDetailActivity extends AppCompatActivity {
         btnEditMembers = findViewById(R.id.btnEditMembers);
         btnDeleteGroup = findViewById(R.id.btnDeleteGroup);
 
-        // 인텐트에서 그룹 이름과 멤버 리스트 받기
+        // 인텐트에서 그룹 ID, 그룹 이름, 멤버 리스트 받기
+        groupId = getIntent().getStringExtra("groupId"); // <-- 그룹 ID 받기
         groupName = getIntent().getStringExtra("groupName");
         memberList = getIntent().getStringArrayListExtra("memberList");
         if (memberList == null) memberList = new ArrayList<>();
+
+        // groupId가 없는 경우는 치명적인 오류이므로 확인 로직 필요
+        if (groupId == null || groupId.isEmpty()) {
+            Toast.makeText(this, "그룹 ID를 찾을 수 없습니다.", Toast.LENGTH_LONG).show();
+            finish(); // 그룹 ID 없이 진행할 수 없으므로 액티비티 종료
+            return;
+        }
 
         textGroupName.setText(groupName);
 
@@ -59,10 +74,24 @@ public class GroupDetailActivity extends AppCompatActivity {
                     .setTitle("그룹 삭제")
                     .setMessage("'" + groupName + "' 그룹을 삭제하시겠습니까?")
                     .setPositiveButton("삭제", (dialog, which) -> {
-                        // 그룹 이름을 결과로 넘김
-                        getIntent().putExtra("deleteGroupName", groupName);
-                        setResult(RESULT_OK, getIntent());
-                        finish();
+                        // !!!! 이 부분에서 GroupRepository를 사용하여 Firestore에서 그룹을 삭제해야 합니다. !!!!
+                        groupRepository.deleteGroup(groupId, new GroupRepository.FirestoreCallback<Void>() {
+                            @Override
+                            public void onSuccess(Void result) {
+                                // Firestore 삭제 성공
+                                Toast.makeText(GroupDetailActivity.this, "'" + groupName + "' 그룹이 삭제되었습니다.", Toast.LENGTH_SHORT).show();
+                                // GroupActivity로 돌아가서 그룹 목록을 갱신하도록 RESULT_OK 설정
+                                setResult(RESULT_OK);
+                                finish(); // GroupDetailActivity 종료
+                            }
+
+                            @Override
+                            public void onFailure(Exception e) {
+                                // Firestore 삭제 실패 (GroupRepository에서 Toast 메시지 처리)
+                                // Logcat에 오류를 기록하여 디버깅에 도움
+                                Log.e("GroupDetailActivity", "그룹 삭제 실패: " + e.getMessage());
+                            }
+                        });
                     })
                     .setNegativeButton("취소", null)
                     .show();

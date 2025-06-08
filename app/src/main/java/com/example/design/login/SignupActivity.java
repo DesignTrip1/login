@@ -18,6 +18,7 @@ import com.example.design.R;
 
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -75,6 +76,7 @@ public class SignupActivity extends AppCompatActivity {
             user.put("email", emailStr);
             user.put("birth", birth);
             user.put("group", null); // 초기에는 그룹 없음
+            user.put("friends", new ArrayList<String>());
 
             firestore.collection("users")
                     .document(userId)
