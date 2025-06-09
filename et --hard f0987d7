@@ -1,0 +1,26 @@
+[33ma3c392f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mback[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{0}: reset: moving to origin/main
+[33m12726ef[m[33m ([m[1;31morigin/back[m[33m)[m HEAD@{1}: merge origin/main: updating HEAD
+[33m12726ef[m[33m ([m[1;31morigin/back[m[33m)[m HEAD@{2}: checkout: moving from back to back
+[33m12726ef[m[33m ([m[1;31morigin/back[m[33m)[m HEAD@{3}: reset: moving to origin/back
+[33m485bce6[m HEAD@{4}: merge origin/main: Merge made by the 'ort' strategy.
+[33mf0987d7[m HEAD@{5}: commit: back
+[33md19ccbd[m HEAD@{6}: merge origin/main: updating HEAD
+[33md19ccbd[m HEAD@{7}: commit (merge): back
+[33m570d3f6[m HEAD@{8}: commit: back
+[33m12726ef[m[33m ([m[1;31morigin/back[m[33m)[m HEAD@{9}: merge origin/main: updating HEAD
+[33m12726ef[m[33m ([m[1;31morigin/back[m[33m)[m HEAD@{10}: commit: back
+[33m41e00f4[m HEAD@{11}: commit (merge): back
+[33mec7d232[m HEAD@{12}: commit (merge): back
+[33m5e4d7fe[m HEAD@{13}: commit: back
+[33m31447d2[m HEAD@{14}: commit (merge): Back
+[33md5fdd33[m HEAD@{15}: commit: back
+[33m3dfe7c7[m HEAD@{16}: reset: moving to HEAD
+[33m3dfe7c7[m HEAD@{17}: reset: moving to HEAD
+[33m3dfe7c7[m HEAD@{18}: commit: back
+[33m782d458[m HEAD@{19}: commit: back
+[33mc1bc42d[m HEAD@{20}: commit: back
+[33ma4cbfd8[m HEAD@{21}: commit: back
+[33m2de4615[m HEAD@{22}: commit: back
+[33m238e46e[m HEAD@{23}: commit: back
+[33m9f6f925[m[33m ([m[1;32mmain[m[33m)[m HEAD@{24}: checkout: moving from main to back
+[33m9f6f925[m[33m ([m[1;32mmain[m[33m)[m HEAD@{25}: clone: from https://github.com/DesignTrip1/login.git
