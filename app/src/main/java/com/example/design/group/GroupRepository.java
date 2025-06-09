@@ -452,7 +452,59 @@ public class GroupRepository {
                     callback.onFailure(e);
                 });
     }
+    public void updateGroupMembers(String groupId, List<String> newMembers, FirestoreCallback<Void> callback) {
+        if (groupId == null || groupId.isEmpty()) {
+            Toast.makeText(context, "그룹 ID가 유효하지 않습니다.", Toast.LENGTH_SHORT).show();
+            callback.onFailure(new IllegalArgumentException("Group ID cannot be null or empty."));
+            return;
+        }
 
+        // Firestore의 'groups' 컬렉션에서 해당 그룹 문서를 찾아 'members' 필드를 업데이트합니다.
+        db.collection("groups").document(groupId)
+                .update("members", newMembers) // 'members' 필드를 새 리스트로 덮어씌웁니다.
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("GroupRepository", "그룹 멤버 업데이트 성공: " + groupId);
+                    Toast.makeText(context, "그룹 구성원이 업데이트되었습니다.", Toast.LENGTH_SHORT).show();
+                    callback.onSuccess(null);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("GroupRepository", "그룹 멤버 업데이트 실패: " + e.getMessage(), e);
+                    Toast.makeText(context, "그룹 구성원 업데이트 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    callback.onFailure(e);
+                });
+    }
+
+    // ⭐ 추가: 모든 친구 목록을 가져오는 메서드 (예시, 실제 구현은 사용자 친구 목록에 따라 달라짐)
+    // 이 메서드는 'users' 컬렉션의 특정 필드에서 친구 ID를 가져온다고 가정합니다.
+    // 실제 친구 목록 데이터 구조에 맞게 수정해야 합니다.
+    public void getAllFriends(String currentUserId, FirestoreCallback<Set<String>> callback) {
+        if (currentUserId == null || currentUserId.isEmpty()) {
+            callback.onFailure(new IllegalArgumentException("Current User ID is null or empty."));
+            return;
+        }
+
+        db.collection("users").document(currentUserId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists() && documentSnapshot.contains("friends")) {
+                        // 'friends' 필드가 List<String> 형태라고 가정합니다.
+                        // 실제 데이터 구조에 따라 Map이거나 다른 형태일 수 있습니다.
+                        List<String> friendsList = (List<String>) documentSnapshot.get("friends");
+                        if (friendsList != null) {
+                            callback.onSuccess(new java.util.HashSet<>(friendsList));
+                        } else {
+                            callback.onSuccess(new java.util.HashSet<>()); // 친구가 없으면 빈 Set 반환
+                        }
+                    } else {
+                        callback.onSuccess(new java.util.HashSet<>()); // 문서가 없거나 friends 필드가 없으면 빈 Set 반환
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("GroupRepository", "친구 목록 불러오기 실패: " + e.getMessage(), e);
+                    Toast.makeText(context, "친구 목록 불러오기 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    callback.onFailure(e);
+                });
+    }
     /**
      * 그룹을 삭제합니다. 그룹의 모든 멤버를 탈퇴 처리한 후, 해당 그룹에 속한 마커들을 삭제하고 마지막으로 그룹 문서를 삭제합니다.
      * @param groupId 삭제할 그룹 ID

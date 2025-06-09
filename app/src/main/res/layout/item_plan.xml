@@ -11,7 +11,6 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
-        <!-- 삭제 버튼 -->
         <ImageButton
             android:id="@+id/btnDelete"
             android:layout_width="24dp"
@@ -23,37 +22,29 @@
             android:contentDescription="삭제"
             app:tint="@null" />
 
-        <!-- 제목 -->
         <TextView
-            android:id="@+id/txtPlanTitle"
-            android:layout_width="wrap_content"
+            android:id="@+id/txtPlanTitle"  android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="18sp"
             android:textStyle="bold"
             android:layout_toStartOf="@id/btnDelete"
             android:layout_alignParentStart="true"
-            android:layout_marginEnd="8dp" />
-
-        <!-- 기간 -->
-        <TextView
-            android:id="@+id/txtPlanPeriod"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/txtPlanTitle"
-            android:layout_alignParentStart="true"
-            android:textSize="14sp"
-            android:layout_marginTop="4dp" />
-
-        <!-- 그룹명 -->
-        <TextView
-            android:id="@+id/txtPlanGroup"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/txtPlanPeriod"
-            android:layout_alignParentStart="true"
-            android:textSize="14sp"
-            android:layout_marginTop="4dp"
-            android:textColor="@android:color/black" />
-    </RelativeLayout>
+            android:layout_marginEnd="8dp"
+            android:text="여행 제목" /> <TextView
+        android:id="@+id/txtPlanPeriod" android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/txtPlanTitle"
+        android:layout_alignParentStart="true"
+        android:textSize="14sp"
+        android:layout_marginTop="4dp"
+        android:text="2025-06-10 ~ 2025-06-12" /> <TextView
+        android:id="@+id/txtPlanGroup" android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/txtPlanPeriod"
+        android:layout_alignParentStart="true"
+        android:textSize="14sp"
+        android:layout_marginTop="4dp"
+        android:textColor="@android:color/black"
+        android:text="우리 그룹" /> </RelativeLayout>
 
 </androidx.cardview.widget.CardView>

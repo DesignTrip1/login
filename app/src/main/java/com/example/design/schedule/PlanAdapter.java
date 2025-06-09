@@ -39,6 +39,12 @@ public class PlanAdapter extends RecyclerView.Adapter<PlanAdapter.PlanViewHolder
         this.planList = planList;
     }
 
+    // 어댑터의 데이터를 업데이트하는 메서드
+    public void setPlanList(List<PlanItem> newPlanList) {
+        this.planList = newPlanList;
+        notifyDataSetChanged(); // 데이터가 변경되었음을 RecyclerView에 알림
+    }
+
     @NonNull
     @Override
     public PlanViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -50,8 +56,11 @@ public class PlanAdapter extends RecyclerView.Adapter<PlanAdapter.PlanViewHolder
     public void onBindViewHolder(@NonNull PlanViewHolder holder, int position) {
         PlanItem plan = planList.get(position);
         holder.txtTitle.setText(plan.getTitle());
-        holder.txtPeriod.setText(plan.getPeriod());
-        holder.txtGroup.setText("그룹: " + plan.getGroupName());  // ✅ 그룹명 표시
+        holder.txtPeriod.setText(plan.getPeriod()); // getPeriod()는 startDate와 endDate 조합
+
+        // ⭐ groupName 대신 groupId를 사용하며, 사용자에게 보여주기 편하도록 고정 텍스트로 변경
+        holder.txtGroup.setText("공유 그룹 일정");
+        // 만약 실제 groupId를 보여주고 싶다면: holder.txtGroup.setText("그룹 ID: " + plan.getGroupId());
     }
 
     @Override
@@ -67,10 +76,10 @@ public class PlanAdapter extends RecyclerView.Adapter<PlanAdapter.PlanViewHolder
             super(itemView);
             txtTitle = itemView.findViewById(R.id.txtPlanTitle);
             txtPeriod = itemView.findViewById(R.id.txtPlanPeriod);
-            txtGroup = itemView.findViewById(R.id.txtPlanGroup);  // ✅ 그룹명 TextView 추가 (item_plan.xml 에 추가 필요!)
+            txtGroup = itemView.findViewById(R.id.txtPlanGroup); // item_plan.xml에 txtPlanGroup ID가 있는지 확인
 
             btnDelete = itemView.findViewById(R.id.btnDelete);
-            btnDelete.setColorFilter(null); // tint 제거
+            btnDelete.setColorFilter(null); // tint 제거 (resource set for bt_del, make sure it's correct)
 
             itemView.setOnClickListener(v -> {
                 if (onItemClickListener != null && getAdapterPosition() != RecyclerView.NO_POSITION) {
