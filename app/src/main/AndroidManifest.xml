@@ -68,6 +68,10 @@
 
         <activity android:name=".roulette.RouletteSliderActivity" />
 
+        <activity
+            android:name=".roulette.PlaceListActivity"
+            android:exported="false" />
+
 
         <!-- 회원가입 화면 -->
         <activity
