@@ -10,7 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.design.R;
+import com.example.design.R; // R.id 등을 사용하기 위해 임포트
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,15 +27,16 @@ public class PlaceListActivity extends AppCompatActivity implements PlaceListAda
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_place_list);
+        setContentView(R.layout.activity_place_list); // 변경 없음
 
+        // 뷰 초기화
         titleTextView = findViewById(R.id.titleTextView);
         placesRecyclerView = findViewById(R.id.placesRecyclerView);
         confirmButton = findViewById(R.id.confirmButton);
 
         // Intent로부터 여행지 이름 받기
         selectedDestination = getIntent().getStringExtra("destinationName");
-        if (selectedDestination == null) {
+        if (selectedDestination == null || selectedDestination.isEmpty()) {
             selectedDestination = "선택된 여행지 없음"; // 오류 처리 또는 기본값
         }
         titleTextView.setText(selectedDestination + " 장소 선택");
@@ -45,23 +46,23 @@ public class PlaceListActivity extends AppCompatActivity implements PlaceListAda
 
         // RecyclerView 설정
         placesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new PlaceListAdapter(currentPlaces, this); // 'this'는 OnPlaceCheckedChangeListener 구현
+        // ⭐ PlaceListAdapter 생성자에 Context (this)를 추가로 전달 ⭐
+        adapter = new PlaceListAdapter(this, currentPlaces, this); // 'this'는 OnPlaceCheckedChangeListener 구현
         placesRecyclerView.setAdapter(adapter);
 
         // 확인 버튼 클릭 리스너
         confirmButton.setOnClickListener(v -> {
             List<String> selectedPlaceNames = new ArrayList<>();
             for (RouletteData.Place place : currentPlaces) {
-                if (place.isChecked) {
+                if (place.isChecked()) { // isChecked() 메서드 사용
                     selectedPlaceNames.add(place.name);
                 }
             }
             if (!selectedPlaceNames.isEmpty()) {
-                // 선택된 장소들을 Toast 메시지로 보여줍니다.
-                // 실제 앱에서는 이 데이터를 다음 화면으로 전달하거나 다른 로직을 수행할 수 있습니다.
                 Toast.makeText(PlaceListActivity.this,
                         "선택된 장소: " + String.join(", ", selectedPlaceNames),
                         Toast.LENGTH_LONG).show();
+                // TODO: 실제 앱에서는 이 데이터를 다음 화면으로 전달하거나 다른 로직을 수행할 수 있습니다.
             } else {
                 Toast.makeText(PlaceListActivity.this, "선택된 장소가 없습니다.", Toast.LENGTH_SHORT).show();
             }
@@ -71,23 +72,26 @@ public class PlaceListActivity extends AppCompatActivity implements PlaceListAda
         updateConfirmButtonState();
 
         // 액션바 설정 (선택 사항)
+        // AppCompatActivity를 상속받았으므로 ActionBar를 직접 사용하는 것이 일반적입니다.
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(selectedDestination + " 장소");
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true); // 뒤로가기 버튼 활성화
         }
     }
 
     @Override
     public void onPlaceCheckedChange(String placeName, boolean isChecked) {
         // 체크박스 상태 변경 시 호출됩니다.
-        updateConfirmButtonState(); // 확인 버튼 상태를 업데이트합니다.
+        // 여기서는 데이터 모델의 isChecked 상태는 PlaceListAdapter 내부에서 이미 업데이트됩니다.
+        // 따라서 여기서는 UI (확인 버튼 상태)만 업데이트하면 됩니다.
+        updateConfirmButtonState();
     }
 
     // 확인 버튼의 활성화 상태를 업데이트하는 메서드
     private void updateConfirmButtonState() {
         boolean anyChecked = false;
         for (RouletteData.Place place : currentPlaces) {
-            if (place.isChecked) {
+            if (place.isChecked()) { // isChecked() 메서드 사용
                 anyChecked = true;
                 break;
             }
@@ -97,7 +101,8 @@ public class PlaceListActivity extends AppCompatActivity implements PlaceListAda
 
     @Override
     public boolean onSupportNavigateUp() {
-        finish(); // 뒤로가기 버튼 처리
+        // 액션바의 뒤로가기 버튼 클릭 시 호출
+        finish(); // 현재 액티비티 종료
         return true;
     }
 }

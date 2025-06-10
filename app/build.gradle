@@ -38,26 +38,39 @@ android {
 }
 
 dependencies {
+    // Google Play Services 및 Places API
     implementation "com.google.android.gms:play-services-maps:19.2.0"
-    implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation "com.google.android.gms:play-services-location:21.3.0"
     implementation 'com.google.android.libraries.places:places:4.2.0'
 
+    // AndroidX 기본 라이브러리
     implementation libs.appcompat
-    implementation libs.material
     implementation libs.constraintlayout
-    implementation libs.navigation.fragment
-    implementation libs.navigation.ui
     implementation libs.activity
-    implementation libs.firebase.firestore
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
 
+    // Material Design
+    implementation libs.material // Material Components 최신 버전
+    // CardView (item_place_card.xml 에서 사용)
+    implementation 'androidx.cardview:cardview:1.0.0'
+
+    // Navigation Component (기존 코드에 있었음)
+    implementation libs.navigation.fragment
+    implementation libs.navigation.ui
+
+    // Firebase (BOM을 사용하여 버전 관리)
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    implementation 'com.google.firebase:firebase-auth' // BOM으로 버전 관리
+    implementation libs.firebase.firestore // BOM으로 버전 관리
+
+    // ViewPager2 및 인디케이터
     implementation 'androidx.viewpager2:viewpager2:1.0.0'
     implementation 'com.tbuonomo:dotsindicator:4.3' // 인디케이터 점 라이브러리
 
-    implementation 'androidx.cardview:cardview:1.0.0'  // 여기에 추가
-    implementation 'com.google.firebase:firebase-auth:22.3.1'  // 최신 버전 기준 (2025년 기준)
-    implementation platform('com.google.firebase:firebase-bom:32.7.0')
-
+    // 이미지 로딩 라이브러리 (선택 사항: 더 나은 이미지 로딩을 위해 Glide 추가)
+    // Glide는 RecyclerView의 이미지 로딩 성능을 크게 향상시킬 수 있습니다.
+    // implementation 'com.github.bumptech.glide:glide:4.12.0'
+    // annotationProcessor 'com.github.bumptech.glide:compiler:4.12.0'
 }

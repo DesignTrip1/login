@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"  android:layout_marginEnd="16dp"
+    android:layout_marginTop="8dp"   android:layout_marginBottom="8dp" app:cardCornerRadius="12dp"    app:cardElevation="6dp"        app:cardBackgroundColor="@android:color/white" android:foreground="?attr/selectableItemBackground"> <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/imgPlace"
+        android:layout_width="match_parent"
+        android:layout_height="200dp" android:scaleType="centerCrop" android:src="@drawable/jeju1" app:shapeAppearanceOverlay="@style/TopRoundedCornersImageView" android:adjustViewBounds="true"
+        android:background="#E0E0E0"/> <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"> <TextView
+    android:id="@+id/txtPlaceTitle"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="장소 이름"
+    android:textSize="22sp"     android:textStyle="bold"
+    android:textColor="@android:color/black"
+    android:maxLines="1"       android:ellipsize="end"/>  <TextView
+    android:id="@+id/txtPlaceCategory"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="명소 / 체험"
+    android:textSize="14sp"
+    android:textColor="#757575" android:layout_marginTop="4dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@drawable/ic_star"
+            app:tint="#FFC107" /> <TextView
+        android:id="@+id/txtPlaceRating"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="4.5"
+        android:textSize="14sp"
+        android:textColor="@android:color/black"
+        android:layout_marginStart="4dp"/>
+
+        <TextView
+            android:id="@+id/txtPlaceAddress"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="전주시 완산구"
+            android:textSize="13sp"
+            android:textColor="#757575"
+            android:layout_marginStart="16dp"
+            android:maxLines="1"
+            android:ellipsize="end"/>
+    </LinearLayout>
+
+    <CheckBox
+        android:id="@+id/checkBoxSelectPlace"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="선택하기"
+        android:layout_gravity="end" android:layout_marginTop="8dp"
+        android:buttonTint="#FF7043" android:textColor="@android:color/black"/>
+
+</LinearLayout>
+</LinearLayout>
+</androidx.cardview.widget.CardView>
