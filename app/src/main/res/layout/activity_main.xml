@@ -8,6 +8,19 @@
     android:padding="16dp"
     tools:context=".MainActivity">
 
+    <!-- 로그아웃 -->
+    <ImageButton
+        android:id="@+id/btnLogout"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_margin="8dp"
+        android:src="@drawable/bt_logout"
+        android:contentDescription="로그아웃"
+        android:background="@android:color/transparent"
+        android:scaleType="centerInside"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <!-- 지도 이미지 -->
     <ImageView
         android:id="@+id/imgMap"

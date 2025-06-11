@@ -1,36 +1,35 @@
 package com.example.design;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.design.community.CommunityActivity;
 import com.example.design.group.GroupActivity;
-import com.example.design.recommend.MainImageSliderAdapter; // MainImageSliderAdapter 임포트
+import com.example.design.recommend.MainImageSliderAdapter;
 import com.example.design.roulette.RouletteActivity;
-// import com.example.design.roulette.RouletteData; // 이 액티비티에서는 더 이상 직접 RouletteData 사용 안함
-import com.example.design.recommend.FullscreenSliderActivity; // FullscreenSliderActivity 임포트 ⭐
+import com.example.design.recommend.FullscreenSliderActivity;
 import com.example.design.schedule.PlanActivity;
 
 import java.util.ArrayList;
-import java.util.Arrays; // Arrays.asList() 사용을 위해 추가
-import java.util.HashMap; // HashMap 사용을 위해 추가
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map; // Map 사용을 위해 추가
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
     private ViewPager2 viewPager;
     private MainImageSliderAdapter mainImageSliderAdapter;
     private LinearLayout indicatorLayout;
-
-    // ⭐ 메인 슬라이드 이미지 ID와 해당 이미지에 대한 '관련 사진' 리스트를 매핑하는 맵 ⭐
     private Map<Integer, List<Integer>> relatedImagesMap;
 
     @Override
@@ -42,66 +41,47 @@ public class MainActivity extends AppCompatActivity {
         viewPager = findViewById(R.id.viewPager);
         indicatorLayout = findViewById(R.id.indicatorLayout);
 
-        // --- 메인 슬라이더 데이터 및 관련 이미지 설정 ---
-        // 1. 메인 슬라이더에 표시할 이미지 리스트
+        // 메인 슬라이더 데이터 및 관련 이미지 설정
         List<Integer> mainSliderImages = new ArrayList<>();
         mainSliderImages.add(R.drawable.mainslide_jeju);
         mainSliderImages.add(R.drawable.mainslide_busan);
         mainSliderImages.add(R.drawable.mainslide_jeonju);
-        // 필요한 경우 더 많은 메인 슬라이더 이미지 추가 (예: R.drawable.seoul, R.drawable.gangwon 등)
 
-        // 2. 각 메인 슬라이더 이미지에 대한 '관련 사진' 리스트 정의
-        // 이 부분은 사용자가 직접 어떤 사진들을 보여주고 싶은지 설정해야 합니다.
         relatedImagesMap = new HashMap<>();
-        // 제주도 관련 이미지들
         relatedImagesMap.put(R.drawable.mainslide_jeju, Arrays.asList(
-                R.drawable.mainslide_jeju,   // res/drawable 에 추가해야 할 이미지들
+                R.drawable.mainslide_jeju,
                 R.drawable.mainslide_jeju1,
                 R.drawable.mainslide_jeju2
-                // 더 많은 제주도 관련 이미지 추가
         ));
-        // 부산 관련 이미지들
         relatedImagesMap.put(R.drawable.mainslide_busan, Arrays.asList(
                 R.drawable.mainslide_busan,
                 R.drawable.mainslide_busan1,
                 R.drawable.mainslide_busan2
-                // 더 많은 부산 관련 이미지 추가
         ));
-        // 전주 관련 이미지들
         relatedImagesMap.put(R.drawable.mainslide_jeonju, Arrays.asList(
                 R.drawable.mainslide_jeonju,
                 R.drawable.mainslide_jeonju1,
                 R.drawable.mainslide_jeonju2
-                // 더 많은 전주 관련 이미지 추가
         ));
-        // ⭐ 이 이미지들은 모두 res/drawable 폴더에 존재해야 합니다. ⭐
 
-        // MainImageSliderAdapter 초기화 (단순 이미지 리스트 전달)
         mainImageSliderAdapter = new MainImageSliderAdapter(this, mainSliderImages);
         viewPager.setAdapter(mainImageSliderAdapter);
 
-        // MainImageSliderAdapter의 클릭 리스너 설정
-        mainImageSliderAdapter.setOnImageClickListener((clickedImageResId, position) -> { // ⭐ 변경 ⭐
-            // 클릭된 이미지에 해당하는 관련 이미지 리스트를 가져옴
+        mainImageSliderAdapter.setOnImageClickListener((clickedImageResId, position) -> {
             List<Integer> imagesToShowInFullscreen = relatedImagesMap.get(clickedImageResId);
 
             if (imagesToShowInFullscreen != null && !imagesToShowInFullscreen.isEmpty()) {
                 Intent intent = new Intent(MainActivity.this, FullscreenSliderActivity.class);
-                // 관련 이미지 리스트를 Intent에 담아 FullscreenSliderActivity로 전달
                 intent.putIntegerArrayListExtra("imageList", new ArrayList<>(imagesToShowInFullscreen));
-                // 클릭된 이미지가 relatedImagesMap의 첫 번째 이미지와 일치한다면, 시작 위치는 0
-                // 아니면 relatedImagesMap.get(clickedImageResId).indexOf(clickedImageResId) 등으로 조정 가능하지만
-                // 일반적으로 전체 화면 슬라이더는 첫 이미지부터 보여주는 경우가 많으므로 0으로 설정
-                intent.putExtra("currentPosition", 0); // FullscreenSliderActivity의 시작 위치
+                intent.putExtra("currentPosition", 0);
                 startActivity(intent);
                 Toast.makeText(MainActivity.this, "슬라이드 클릭: " + clickedImageResId, Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(MainActivity.this, "관련 이미지가 없습니다.", Toast.LENGTH_SHORT).show();
             }
         });
-        // --- 수정 끝 ---
 
-        setupIndicators(mainSliderImages.size()); // 메인 슬라이더 이미지 크기 반영
+        setupIndicators(mainSliderImages.size());
 
         viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
@@ -127,6 +107,10 @@ public class MainActivity extends AppCompatActivity {
         btnCommunity.setOnClickListener(v -> startActivity(new Intent(this, CommunityActivity.class)));
         btnRoulette.setOnClickListener(v -> startActivity(new Intent(this, RouletteActivity.class)));
         btnGroup.setOnClickListener(v -> startActivity(new Intent(this, GroupActivity.class)));
+
+        // 로그아웃 버튼 클릭 처리 ⭐ 추가 부분 ⭐
+        ImageButton btnLogout = findViewById(R.id.btnLogout);
+        btnLogout.setOnClickListener(v -> showLogoutDialog());
     }
 
     private void setupIndicators(int count) {
@@ -159,5 +143,27 @@ public class MainActivity extends AppCompatActivity {
                 dot.setImageDrawable(getDrawable(R.drawable.indicator_inactive));
             }
         }
+    }
+
+    // ⭐ 로그아웃 다이얼로그 및 기능 ⭐
+    private void showLogoutDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("로그아웃")
+                .setMessage("정말 로그아웃 하시겠습니까?")
+                .setPositiveButton("확인", (dialog, which) -> logout())
+                .setNegativeButton("취소", null)
+                .show();
+    }
+
+    private void logout() {
+        SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("isLoggedIn", false);
+        editor.apply();
+
+        Intent intent = new Intent(MainActivity.this, com.example.design.login.LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 }
