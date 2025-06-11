@@ -45,33 +45,33 @@ public class MainActivity extends AppCompatActivity {
         // --- 메인 슬라이더 데이터 및 관련 이미지 설정 ---
         // 1. 메인 슬라이더에 표시할 이미지 리스트
         List<Integer> mainSliderImages = new ArrayList<>();
-        mainSliderImages.add(R.drawable.jeju);
-        mainSliderImages.add(R.drawable.busan);
-        mainSliderImages.add(R.drawable.jeonju);
+        mainSliderImages.add(R.drawable.mainslide_jeju);
+        mainSliderImages.add(R.drawable.mainslide_busan);
+        mainSliderImages.add(R.drawable.mainslide_jeonju);
         // 필요한 경우 더 많은 메인 슬라이더 이미지 추가 (예: R.drawable.seoul, R.drawable.gangwon 등)
 
         // 2. 각 메인 슬라이더 이미지에 대한 '관련 사진' 리스트 정의
         // 이 부분은 사용자가 직접 어떤 사진들을 보여주고 싶은지 설정해야 합니다.
         relatedImagesMap = new HashMap<>();
         // 제주도 관련 이미지들
-        relatedImagesMap.put(R.drawable.jeju, Arrays.asList(
-                R.drawable.jeju,   // res/drawable 에 추가해야 할 이미지들
-                R.drawable.jeju1,
-                R.drawable.jeju2
+        relatedImagesMap.put(R.drawable.mainslide_jeju, Arrays.asList(
+                R.drawable.mainslide_jeju,   // res/drawable 에 추가해야 할 이미지들
+                R.drawable.mainslide_jeju1,
+                R.drawable.mainslide_jeju2
                 // 더 많은 제주도 관련 이미지 추가
         ));
         // 부산 관련 이미지들
-        relatedImagesMap.put(R.drawable.busan, Arrays.asList(
-                R.drawable.busan,
-                R.drawable.busan1,
-                R.drawable.busan2
+        relatedImagesMap.put(R.drawable.mainslide_busan, Arrays.asList(
+                R.drawable.mainslide_busan,
+                R.drawable.mainslide_busan1,
+                R.drawable.mainslide_busan2
                 // 더 많은 부산 관련 이미지 추가
         ));
         // 전주 관련 이미지들
-        relatedImagesMap.put(R.drawable.jeonju, Arrays.asList(
-                R.drawable.jeonju,
-                R.drawable.jeonju1,
-                R.drawable.jeonju2
+        relatedImagesMap.put(R.drawable.mainslide_jeonju, Arrays.asList(
+                R.drawable.mainslide_jeonju,
+                R.drawable.mainslide_jeonju1,
+                R.drawable.mainslide_jeonju2
                 // 더 많은 전주 관련 이미지 추가
         ));
         // ⭐ 이 이미지들은 모두 res/drawable 폴더에 존재해야 합니다. ⭐

@@ -13,7 +13,7 @@
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/imgPlace"
         android:layout_width="match_parent"
-        android:layout_height="200dp" android:scaleType="centerCrop" android:src="@drawable/jeju1" app:shapeAppearanceOverlay="@style/TopRoundedCornersImageView" android:adjustViewBounds="true"
+        android:layout_height="200dp" android:scaleType="centerCrop" android:src="@drawable/mainslide_jeju1" app:shapeAppearanceOverlay="@style/TopRoundedCornersImageView" android:adjustViewBounds="true"
         android:background="#E0E0E0"/> <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
