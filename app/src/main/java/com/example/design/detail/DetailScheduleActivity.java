@@ -19,12 +19,15 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.example.design.R;
 import com.example.design.group.GroupItem;
 import com.example.design.group.GroupRepository;
+import com.example.design.schedule.DayFragment;
 import com.example.design.schedule.DayPagerAdapter;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.firestore.WriteBatch;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -37,20 +40,18 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
-public class DetailScheduleActivity extends AppCompatActivity {
+// OnPlaceSelectedListener 인터페이스를 구현합니다.
+public class DetailScheduleActivity extends AppCompatActivity implements OnPlaceSelectedListener {
 
     private TabLayout tabLayout;
     private ViewPager2 viewPager;
     private DayPagerAdapter dayPagerAdapter;
-    private List<String> dayTitles; // "Day 1", "Day 2" 등의 리스트
-    private Button btnSelectPlaces; // ⭐ 추가: 장소 선택 버튼
+    private List<String> dayTitles;
 
     // Firestore 인스턴스
     private FirebaseFirestore db;
-    private GroupRepository groupRepository; // ⭐ 추가: GroupRepository 인스턴스
+    private GroupRepository groupRepository;
 
-    // ⭐ 추가: 날짜별 선택된 장소를 저장할 맵
-    // Key: "Day 1", "Day 2" 등, Value: 해당 날짜에 선택된 장소 이름 리스트
     private HashMap<String, List<String>> selectedPlacesPerDay;
 
     // SharedPreferences에서 현재 사용자 ID를 가져오기 위함
@@ -61,6 +62,9 @@ public class DetailScheduleActivity extends AppCompatActivity {
     // 현재 사용자의 그룹 ID
     private String currentGroupId;
 
+    // Fragment에서 마커 선택 다이얼로그 요청 시 어떤 DayFragment에서 요청했는지 추적하기 위한 변수
+    private int requestingDayPosition = -1; // -1은 Activity에서 요청했음을 의미
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,14 +72,12 @@ public class DetailScheduleActivity extends AppCompatActivity {
 
         tabLayout = findViewById(R.id.tabLayout);
         viewPager = findViewById(R.id.viewPager);
-        btnSelectPlaces = findViewById(R.id.btnSelectPlaces); // ⭐ 초기화
 
         db = FirebaseFirestore.getInstance();
-        groupRepository = new GroupRepository(this); // ⭐ GroupRepository 초기화
+        groupRepository = new GroupRepository(this);
 
-        selectedPlacesPerDay = new HashMap<>(); // ⭐ 맵 초기화
+        selectedPlacesPerDay = new HashMap<>();
 
-        // SharedPreferences에서 currentUserId 가져오기
         SharedPreferences prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         currentUserId = prefs.getString(KEY_USER_ID, null);
 
@@ -85,22 +87,16 @@ public class DetailScheduleActivity extends AppCompatActivity {
             return;
         }
 
-        // 현재 사용자의 그룹 ID를 불러옵니다.
-        // groupRepository.loadCurrentGroup 메서드에 currentUserId 파라미터가 있다면 전달합니다.
-        // 만약 GroupRepository.loadCurrentGroup 메서드가 currentUserId를 받지 않도록 수정되었다면,
-        // 아래 호출에서 currentUserId 파라미터를 제거해야 합니다.
-        // (최근 GroupRepository 수정 시 loadCurrentGroup에서 currentUserId 파라미터를 제거했으니,
-        // 해당 부분도 확인이 필요합니다. 여기서는 현재 코드를 기반으로 설명합니다.)
-        groupRepository.loadCurrentGroup(currentUserId, new GroupRepository.FirestoreCallback<GroupItem>() { // ⭐ 이 부분 파라미터 확인 필요
+        groupRepository.loadCurrentGroup(currentUserId, new GroupRepository.FirestoreCallback<GroupItem>() {
             @Override
             public void onSuccess(GroupItem groupItem) {
                 if (groupItem != null) {
-                    // ⭐ 수정: getGroupId() 대신 필드에 직접 접근
-                    currentGroupId = groupItem.groupId; // <-- 이 부분을 수정합니다!
+                    currentGroupId = groupItem.groupId;
                     Log.d("DetailScheduleActivity", "Current user is in group: " + currentGroupId);
                 } else {
                     currentGroupId = null;
                     Toast.makeText(DetailScheduleActivity.this, "사용자가 속한 그룹이 없습니다. 그룹을 생성하거나 가입해주세요.", Toast.LENGTH_LONG).show();
+                    Log.d("DetailScheduleActivity", "사용자가 속한 그룹이 없습니다.");
                 }
             }
 
@@ -112,32 +108,25 @@ public class DetailScheduleActivity extends AppCompatActivity {
             }
         });
 
-
-        // Intent로 데이터 받기
         Intent intent = getIntent();
         String startDate = intent.getStringExtra("startDate");
         String endDate = intent.getStringExtra("endDate");
-        String scheduleName = intent.getStringExtra("scheduleName"); // 여행 일정 이름
+        String scheduleName = intent.getStringExtra("scheduleName");
 
-        dayTitles = generateDayList(startDate, endDate); // "Day 1", "Day 2" 등 생성
-        dayPagerAdapter = new DayPagerAdapter(this, dayTitles);
+        dayTitles = generateDayList(startDate, endDate);
+        dayPagerAdapter = new DayPagerAdapter(this, dayTitles, this);
         viewPager.setAdapter(dayPagerAdapter);
 
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
             tab.setText(dayTitles.get(position));
         }).attach();
+    }
 
-        // ⭐ 장소 선택 버튼 클릭 리스너
-        btnSelectPlaces.setOnClickListener(v -> {
-            if (currentGroupId == null || currentGroupId.isEmpty()) {
-                Toast.makeText(this, "그룹이 없으므로 장소를 선택할 수 없습니다.", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            showPlaceSelectionDialog();
-        });
-
-        // TODO: 실제 앱에서는 '일정 저장' 버튼을 따로 만들고, 그 버튼 클릭 시 saveScheduleToFirestore 호출
-        // 현재는 편의상 showAssignPlacesToDaysDialog 완료 후 즉시 호출하도록 되어있습니다.
+    // OnPlaceSelectedListener 인터페이스 구현 메서드
+    @Override
+    public void onPlaceSelected(String placeName, int dayPosition) {
+        this.requestingDayPosition = dayPosition;
+        showPlaceSelectionDialogForFragment();
     }
 
     private List<String> generateDayList(String start, String end) {
@@ -163,22 +152,20 @@ public class DetailScheduleActivity extends AppCompatActivity {
         return result;
     }
 
-    // ⭐ 추가: 장소 선택 다이얼로그 표시 메서드
-    private void showPlaceSelectionDialog() {
+    private void showPlaceSelectionDialogForFragment() {
         if (currentGroupId == null || currentGroupId.isEmpty()) {
             Toast.makeText(this, "현재 그룹 정보가 없습니다.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Firestore에서 현재 그룹에 속한 마커들을 불러옵니다.
-        db.collection("markers") // 마커 컬렉션 이름은 실제 Firestore 구조에 맞게 수정
-                .whereEqualTo("groupId", currentGroupId)
+        db.collection("markers")
+                .whereEqualTo("group", currentGroupId)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     List<String> markerNames = new ArrayList<>();
                     if (!queryDocumentSnapshots.isEmpty()) {
                         for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
-                            String markerName = document.getString("name"); // 마커 이름 필드명
+                            String markerName = document.getString("name");
                             if (markerName != null) {
                                 markerNames.add(markerName);
                             }
@@ -190,51 +177,44 @@ public class DetailScheduleActivity extends AppCompatActivity {
                         return;
                     }
 
-                    // 마커 이름들을 정렬
                     Collections.sort(markerNames);
 
-                    // 다이얼로그에 표시할 장소 목록 (친구 목록처럼 다중 선택 가능하도록)
-                    boolean[] checkedItems = new boolean[markerNames.size()];
-                    ArrayList<Integer> selectedItemsIndexes = new ArrayList<>(); // 선택된 아이템들의 인덱스
-
-                    // 이전에 선택된 장소가 있다면 미리 체크 표시
-                    for (int i = 0; i < markerNames.size(); i++) {
-                        String marker = markerNames.get(i);
-                        for (Map.Entry<String, List<String>> entry : selectedPlacesPerDay.entrySet()) {
-                            if (entry.getValue().contains(marker)) {
-                                checkedItems[i] = true;
-                                if (!selectedItemsIndexes.contains(i)) {
-                                    selectedItemsIndexes.add(i);
-                                }
-                                break; // 이미 이 장소는 어느 Day에 할당됨
-                            }
-                        }
+                    String currentPlaceInFragment = null;
+                    DayFragment targetFragment = (DayFragment) dayPagerAdapter.getFragment(requestingDayPosition);
+                    if (targetFragment != null) {
+                        currentPlaceInFragment = targetFragment.getPlaceText();
                     }
 
+                    int checkedItem = -1;
+                    if (currentPlaceInFragment != null && !currentPlaceInFragment.isEmpty()) {
+                        checkedItem = markerNames.indexOf(currentPlaceInFragment);
+                    }
+
+                    final int[] selectedItemFinalIndex = {checkedItem};
 
                     AlertDialog.Builder builder = new AlertDialog.Builder(DetailScheduleActivity.this);
                     builder.setTitle("장소 선택");
-                    builder.setMultiChoiceItems(markerNames.toArray(new String[0]), checkedItems, (dialog, which, isChecked) -> {
-                        if (isChecked) {
-                            if (!selectedItemsIndexes.contains(which)) { // 중복 추가 방지
-                                selectedItemsIndexes.add(which);
-                            }
-                        } else {
-                            selectedItemsIndexes.remove(Integer.valueOf(which)); // Integer 객체로 제거
-                        }
+                    builder.setSingleChoiceItems(markerNames.toArray(new String[0]), checkedItem, (dialog, which) -> {
+                        selectedItemFinalIndex[0] = which;
                     });
 
                     builder.setPositiveButton("확인", (dialog, which) -> {
-                        List<String> tempSelectedPlaces = new ArrayList<>();
-                        for (Integer index : selectedItemsIndexes) {
-                            tempSelectedPlaces.add(markerNames.get(index));
+                        if (selectedItemFinalIndex[0] != -1) {
+                            String selectedPlace = markerNames.get(selectedItemFinalIndex[0]);
+                            DayFragment fragment = (DayFragment) dayPagerAdapter.getFragment(requestingDayPosition);
+                            if (fragment != null) {
+                                fragment.setPlaceText(selectedPlace);
+                            }
+                        } else {
+                            Toast.makeText(DetailScheduleActivity.this, "장소를 선택해주세요.", Toast.LENGTH_SHORT).show();
                         }
-                        // 이제 선택된 장소들을 날짜별로 할당하는 다이얼로그를 띄웁니다.
-                        showAssignPlacesToDaysDialog(tempSelectedPlaces);
+                        requestingDayPosition = -1;
                     });
-                    builder.setNegativeButton("취소", null);
+                    builder.setNegativeButton("취소", (dialog, which) -> {
+                        requestingDayPosition = -1;
+                        dialog.dismiss();
+                    });
                     builder.show();
-
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(DetailScheduleActivity.this, "마커 로드 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -242,7 +222,6 @@ public class DetailScheduleActivity extends AppCompatActivity {
                 });
     }
 
-    // ⭐ 추가: 선택된 장소들을 날짜별로 할당하는 다이얼로그
     private void showAssignPlacesToDaysDialog(List<String> placesToAssign) {
         if (placesToAssign.isEmpty()) {
             Toast.makeText(this, "선택된 장소가 없습니다. 장소를 선택해주세요.", Toast.LENGTH_SHORT).show();
@@ -253,13 +232,10 @@ public class DetailScheduleActivity extends AppCompatActivity {
         builder.setTitle("장소 할당 (날짜 선택)");
 
         LayoutInflater inflater = getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.dialog_assign_places_to_days, null); // 이 레이아웃 파일 필요
+        View dialogView = inflater.inflate(R.layout.dialog_assign_places_to_days, null);
         android.widget.LinearLayout layoutDaysContainer = dialogView.findViewById(R.id.layoutDaysContainer);
 
-
-        // 이전에 할당된 장소들을 초기 상태로 설정
-        // 이 맵에 할당된 장소는 `selectedPlacesPerDay`에 저장됩니다.
-        // 이 다이얼로그는 각 Day에 할당된 장소를 보여주고, '장소 수정' 버튼을 통해 Day별 할당을 다시 할 수 있게 합니다.
+        final HashMap<String, List<String>> tempAssignedPlaces = new HashMap<>(selectedPlacesPerDay);
 
         for (String dayTitle : dayTitles) {
             TextView dayTextView = new TextView(this);
@@ -269,32 +245,21 @@ public class DetailScheduleActivity extends AppCompatActivity {
             dayTextView.setPadding(0, 10, 0, 5);
             layoutDaysContainer.addView(dayTextView);
 
-            // 해당 Day에 현재 할당된 장소 목록 표시
-            List<String> currentDayPlaces = selectedPlacesPerDay.getOrDefault(dayTitle, new ArrayList<>());
-            StringBuilder currentPlacesText = new StringBuilder();
-            if (!currentDayPlaces.isEmpty()) {
-                currentPlacesText.append("현재 장소: ");
-                for (int i = 0; i < currentDayPlaces.size(); i++) {
-                    currentPlacesText.append(currentDayPlaces.get(i));
-                    if (i < currentDayPlaces.size() - 1) {
-                        currentPlacesText.append(", ");
-                    }
-                }
-            } else {
-                currentPlacesText.append("현재 할당된 장소 없음");
-            }
+            List<String> currentDayPlaces = tempAssignedPlaces.getOrDefault(dayTitle, new ArrayList<>());
             TextView currentPlacesTextView = new TextView(this);
-            currentPlacesTextView.setText(currentPlacesText.toString());
+            updateCurrentPlacesTextView(currentPlacesTextView, currentDayPlaces);
             currentPlacesTextView.setTextColor(Color.GRAY);
             currentPlacesTextView.setPadding(0, 0, 0, 10);
             layoutDaysContainer.addView(currentPlacesTextView);
 
-
-            // 해당 Day에 장소를 추가/제거할 수 있는 버튼 (혹은 스피너)
             Button editDayPlacesButton = new Button(this);
             editDayPlacesButton.setText(dayTitle + " 장소 수정");
             editDayPlacesButton.setOnClickListener(v -> {
-                showMultiChoicePlaceDialogForDay(dayTitle, placesToAssign, currentDayPlaces); // 선택된 장소 전체를 넘겨줍니다.
+                showMultiChoicePlaceDialogForDay(dayTitle, placesToAssign, tempAssignedPlaces.getOrDefault(dayTitle, new ArrayList<>()),
+                        (newPlacesList) -> {
+                            tempAssignedPlaces.put(dayTitle, newPlacesList);
+                            updateCurrentPlacesTextView(currentPlacesTextView, newPlacesList);
+                        });
             });
             layoutDaysContainer.addView(editDayPlacesButton);
 
@@ -306,19 +271,23 @@ public class DetailScheduleActivity extends AppCompatActivity {
 
         builder.setView(dialogView);
         builder.setPositiveButton("할당 완료 및 저장", (dialog, which) -> {
-            // 모든 할당이 완료되었음을 알리고 최종 저장 로직을 호출
-            // Intent에서 받은 scheduleName, startDate, endDate 값을 다시 가져옵니다.
+            selectedPlacesPerDay.clear();
+            selectedPlacesPerDay.putAll(tempAssignedPlaces);
+
             String scheduleName = getIntent().getStringExtra("scheduleName");
             String startDate = getIntent().getStringExtra("startDate");
             String endDate = getIntent().getStringExtra("endDate");
-            saveScheduleToFirestore(scheduleName, startDate, endDate); // ⭐ 장소 할당 후 즉시 저장 호출
+            saveScheduleToFirestore(scheduleName, startDate, endDate);
         });
         builder.setNegativeButton("취소", null);
         builder.show();
     }
 
-    // ⭐ 추가: 특정 Day에 장소를 할당하는 다중 선택 다이얼로그
-    private void showMultiChoicePlaceDialogForDay(String dayTitle, List<String> allAvailablePlaces, List<String> currentDayPlaces) {
+    public interface OnPlacesAssignedListener {
+        void onPlacesAssigned(List<String> newPlacesList);
+    }
+
+    private void showMultiChoicePlaceDialogForDay(String dayTitle, List<String> allAvailablePlaces, List<String> currentDayPlaces, OnPlacesAssignedListener listener) {
         boolean[] checkedItems = new boolean[allAvailablePlaces.size()];
         ArrayList<Integer> selectedItemsIndexes = new ArrayList<>();
 
@@ -342,62 +311,89 @@ public class DetailScheduleActivity extends AppCompatActivity {
         });
         builder.setPositiveButton("확인", (dialog, which) -> {
             List<String> newDayPlaces = new ArrayList<>();
-            // 선택된 인덱스들을 정렬하여 순서 보장 (선택 순서가 아닌 목록 순서)
             Collections.sort(selectedItemsIndexes);
             for (Integer index : selectedItemsIndexes) {
                 newDayPlaces.add(allAvailablePlaces.get(index));
             }
-            selectedPlacesPerDay.put(dayTitle, newDayPlaces); // 맵에 할당된 장소 업데이트
+            if (listener != null) {
+                listener.onPlacesAssigned(newDayPlaces);
+            }
             Toast.makeText(this, dayTitle + " 장소 할당이 업데이트되었습니다.", Toast.LENGTH_SHORT).show();
-
-            // 장소 할당 다이얼로그를 닫고 다시 띄워서 변경사항을 반영
-            // (사용자 경험을 위해 할당 다이얼로그를 새로고침하는 방법)
-            // 주의: 이전에 showAssignPlacesToDaysDialog를 호출했던 placesToAssign와 동일한 리스트를 넘겨야 합니다.
-            // 여기서는 `getIntent().getStringExtra("startDate/endDate")`를 사용하여 `dayTitles`를 다시 생성하는 대신,
-            // `showPlaceSelectionDialog`에서 얻은 `placesToAssign` (전체 선택 장소)를 재사용해야 합니다.
-            // 복잡도를 줄이기 위해, 할당 완료 시 토스트만 띄우고 사용자가 '할당 완료 및 저장' 버튼을 누르면 최종 반영되도록 유지합니다.
-            // 만약 즉각적인 UI 반영이 필요하다면 `showAssignPlacesToDaysDialog(placesToAssign);`를 다시 호출해야 합니다.
         });
         builder.setNegativeButton("취소", null);
         builder.show();
     }
 
+    private void updateCurrentPlacesTextView(TextView textView, List<String> places) {
+        StringBuilder currentPlacesText = new StringBuilder();
+        if (!places.isEmpty()) {
+            currentPlacesText.append("현재 장소: ");
+            for (int i = 0; i < places.size(); i++) {
+                currentPlacesText.append(places.get(i));
+                if (i < places.size() - 1) {
+                    currentPlacesText.append(", ");
+                }
+            }
+        } else {
+            currentPlacesText.append("현재 할당된 장소 없음");
+        }
+        textView.setText(currentPlacesText.toString());
+    }
 
-    // ⭐ 수정: Firestore에 일정 데이터를 저장하는 메서드 (장소 데이터 포함)
+    /**
+     * Firestore에 일정 데이터를 저장하는 메서드 (장소 데이터 포함)
+     * 사용자님이 보여주신 구조(최상위 "schedules" 컬렉션 아래에 일정 문서 저장 및 'group' 필드 포함)에 맞춰 수정되었습니다.
+     * 이 일정 문서 아래에 각 Day별 상세 일정을 subcollection으로 저장합니다.
+     */
     private void saveScheduleToFirestore(String scheduleName, String startDate, String endDate) {
         if (scheduleName == null || startDate == null || endDate == null) {
             Toast.makeText(this, "일정 이름 또는 날짜 정보가 부족합니다.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // currentUserId가 없으면 저장 불가
-        if (currentUserId == null || currentUserId.isEmpty()) {
-            Toast.makeText(this, "사용자 ID를 알 수 없어 일정을 저장할 수 없습니다.", Toast.LENGTH_SHORT).show();
+        if (currentGroupId == null || currentGroupId.isEmpty()) {
+            Toast.makeText(this, "그룹 ID를 알 수 없어 일정을 저장할 수 없습니다. 그룹에 먼저 가입해주세요.", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        String scheduleId = UUID.randomUUID().toString();
+        // ★★★ 핵심 변경 사항: 최상위 "schedules" 컬렉션 아래에 일정을 저장
+        DocumentReference scheduleRef = db.collection("schedules").document(scheduleId);
+
+        // 메인 일정 데이터
         Map<String, Object> scheduleData = new HashMap<>();
         scheduleData.put("scheduleName", scheduleName);
         scheduleData.put("startDate", startDate);
         scheduleData.put("endDate", endDate);
-        scheduleData.put("timestamp", new Date()); // 저장 시간 추가
-        scheduleData.put("userId", currentUserId); // ⭐ 사용자 ID 추가
+        scheduleData.put("timestamp", new Date());
+        // ★★★ 이 필드가 이 일정이 속한 그룹을 나타냅니다. 그룹 멤버들이 이 필드를 기준으로 일정을 조회할 수 있습니다.
+        scheduleData.put("group", currentGroupId);
 
-        // ⭐ 날짜별 장소 데이터를 맵으로 저장 (예: {"Day 1": ["장소A", "장소B"], "Day 2": ["장소C"]})
-        // selectedPlacesPerDay 맵은 이미 HashMap<String, List<String>>이므로 바로 저장 가능
-        scheduleData.put("placesPerDay", selectedPlacesPerDay);
+        // Firestore 배치(batch) 초기화 (모든 쓰기 작업을 한 번에 처리하여 데이터 일관성 유지)
+        WriteBatch batch = db.batch();
 
-        // Firestore에 "users" 컬렉션 아래에 사용자 ID별로 서브컬렉션을 만들고, 그 안에 일정을 저장
-        // 예: users/{userId}/schedules/{scheduleId}
-        String scheduleId = UUID.randomUUID().toString(); // 고유한 일정 ID 생성
+        // 1. 메인 일정 문서를 저장합니다.
+        batch.set(scheduleRef, scheduleData, SetOptions.merge());
 
-        db.collection("users").document(currentUserId)
-                .collection("schedules").document(scheduleId) // 사용자별 서브컬렉션
-                .set(scheduleData, SetOptions.merge())
+        // 2. 각 날짜별 상세 일정을 메인 일정 문서의 "dayDetails" 하위 컬렉션의 서브 문서로 저장합니다.
+        for (Map.Entry<String, List<String>> entry : selectedPlacesPerDay.entrySet()) {
+            String dayTitle = entry.getKey(); // 예: "Day 1"
+            List<String> places = entry.getValue(); // 해당 날짜에 선택된 장소 목록
+
+            Map<String, Object> dayDetailData = new HashMap<>();
+            dayDetailData.put("dayTitle", dayTitle);
+            dayDetailData.put("places", places); // 장소 이름 목록을 저장합니다.
+
+            // "dayDetails" 하위 컬렉션 내에 각 날짜별 문서를 생성합니다.
+            DocumentReference dayDetailRef = scheduleRef.collection("dayDetails").document(dayTitle);
+            batch.set(dayDetailRef, dayDetailData, SetOptions.merge());
+        }
+
+        // 모든 배치 작업을 커밋(실행)합니다.
+        batch.commit()
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(this, "일정이 성공적으로 저장되었습니다.", Toast.LENGTH_SHORT).show();
-                    // 일정 저장 후, 필요하다면 메인 화면으로 돌아가거나 다음 액티비티로 이동
-                    finish();
+                    finish(); // 저장 성공 시 액티비티 종료
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "일정 저장 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();

@@ -51,14 +51,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- 장소 입력 -->
     <EditText
         android:id="@+id/editPlace"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="장소 입력"
+        android:hint="장소 입력 (클릭하여 선택)"
         android:padding="10dp"
-        android:inputType="text"
+        android:inputType="none"
+        android:focusable="false"
+        android:clickable="true"
         android:textSize="16sp"
         android:background="@drawable/edittext_background"
         app:layout_constraintTop_toBottomOf="@id/editEndTime"
