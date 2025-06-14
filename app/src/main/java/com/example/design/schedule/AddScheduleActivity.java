@@ -8,11 +8,12 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
-// import android.widget.Toast; // ⭐ Toast import 제거
+import android.widget.Toast; // Toast import 추가
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.design.R;
+import com.google.firebase.firestore.FieldValue; // FieldValue import 추가
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -43,22 +44,42 @@ public class AddScheduleActivity extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         currentUserId = prefs.getString(KEY_USER_ID, null);
 
-        Log.d("AddScheduleActivity", "Loaded currentUserId: " + (currentUserId != null ? currentUserId : "NULL"));
+        if (currentUserId == null || currentUserId.isEmpty()) {
+            Log.e("AddScheduleActivity", "currentUserId is null or empty. Cannot add schedule.");
+            Toast.makeText(this, "사용자 정보를 불러올 수 없습니다. 다시 로그인해주세요.", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
 
         btnStartDate = findViewById(R.id.btnStartDate);
         btnEndDate = findViewById(R.id.btnEndDate);
         btnNext = findViewById(R.id.btnNext);
         editTitle = findViewById(R.id.editTitle);
 
-        btnStartDate.setOnClickListener(v -> showDatePicker(true));
-        btnEndDate.setOnClickListener(v -> showDatePicker(false));
+        btnStartDate.setOnClickListener(v -> showDatePickerDialog(true));
+        btnEndDate.setOnClickListener(v -> showDatePickerDialog(false));
 
         btnNext.setOnClickListener(v -> {
             String title = editTitle.getText().toString().trim();
 
             if (title.isEmpty() || selectedStartDate.isEmpty() || selectedEndDate.isEmpty()) {
-                // Toast 대신 로그로 대체
-                Log.w("AddScheduleActivity", "Validation failed: Title, start date, or end date is empty.");
+                Toast.makeText(this, "모든 필드를 입력해주세요.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // 날짜 유효성 검사 (시작일이 종료일보다 늦을 수 없음)
+            try {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.KOREA);
+                java.util.Date startDateObj = sdf.parse(selectedStartDate);
+                java.util.Date endDateObj = sdf.parse(selectedEndDate);
+
+                if (startDateObj != null && endDateObj != null && startDateObj.after(endDateObj)) {
+                    Toast.makeText(this, "시작일은 종료일보다 빠르거나 같아야 합니다.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            } catch (java.text.ParseException e) {
+                Log.e("AddScheduleActivity", "날짜 파싱 오류: " + e.getMessage());
+                Toast.makeText(this, "날짜 형식 오류", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -66,28 +87,30 @@ public class AddScheduleActivity extends AppCompatActivity {
         });
     }
 
-    private void showDatePicker(boolean isStart) {
+    private void showDatePickerDialog(boolean isStartDate) {
         Calendar calendar = Calendar.getInstance();
-        new DatePickerDialog(this,
-                (view, year, month, dayOfMonth) -> {
-                    String dateStr = String.format(Locale.getDefault(), "%d-%02d-%02d", year, (month + 1), dayOfMonth);
-                    if (isStart) {
-                        selectedStartDate = dateStr;
-                        btnStartDate.setText("시작일: " + dateStr);
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                (view, selectedYear, selectedMonth, selectedDay) -> {
+                    String date = String.format(Locale.KOREA, "%d-%02d-%02d", selectedYear, selectedMonth + 1, selectedDay);
+                    if (isStartDate) {
+                        selectedStartDate = date;
+                        btnStartDate.setText(date);
                     } else {
-                        selectedEndDate = dateStr;
-                        btnEndDate.setText("종료일: " + dateStr);
+                        selectedEndDate = date;
+                        btnEndDate.setText(date);
                     }
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-        ).show();
+                }, year, month, day);
+        datePickerDialog.show();
     }
 
     private void findUserGroupAndSaveSchedule(String title, String startDate, String endDate) {
         if (currentUserId == null || currentUserId.isEmpty()) {
-            Log.e("AddScheduleActivity", "currentUserId is null or empty. Cannot save schedule.");
+            Log.e("AddScheduleActivity", "currentUserId is null or empty. Cannot find user group.");
+            Toast.makeText(this, "사용자 정보를 불러올 수 없습니다. 다시 로그인해주세요.", Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -95,20 +118,21 @@ public class AddScheduleActivity extends AppCompatActivity {
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        // 'groupId' 대신 'group' 필드를 읽음
-                        String group = documentSnapshot.getString("group");
+                        String group = documentSnapshot.getString("group"); // 'group' 필드 사용
                         if (group != null && !group.isEmpty()) {
                             saveScheduleToFirestore(title, startDate, endDate, group);
                         } else {
-                            // 에러 메시지 변경: 'group' 필드 언급
-                            Log.e("AddScheduleActivity", "Group ID not found or empty in user document: " + currentUserId);
+                            Log.e("AddScheduleActivity", "Group ID not found or empty in user document for ID: " + currentUserId);
+                            Toast.makeText(this, "사용자 그룹 정보를 찾을 수 없습니다.", Toast.LENGTH_LONG).show();
                         }
                     } else {
                         Log.e("AddScheduleActivity", "User document not found for ID: " + currentUserId + ". Check 'users' collection.");
+                        Toast.makeText(this, "사용자 문서를 찾을 수 없습니다.", Toast.LENGTH_LONG).show();
                     }
                 })
                 .addOnFailureListener(e -> {
                     Log.e("AddScheduleActivity", "Failed to get user document: " + e.getMessage(), e);
+                    Toast.makeText(this, "사용자 정보 로드 실패: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
     }
 
@@ -117,8 +141,8 @@ public class AddScheduleActivity extends AppCompatActivity {
         schedule.put("title", title);
         schedule.put("startDate", startDate);
         schedule.put("endDate", endDate);
-        // 'groupId' 대신 'group' 필드 사용
-        schedule.put("group", group);
+        schedule.put("group", group); // 'group' 필드 사용
+        schedule.put("timestamp", FieldValue.serverTimestamp()); // ⭐ 시간 필드 추가
 
         db.collection("schedules")
                 .add(schedule)
@@ -126,12 +150,12 @@ public class AddScheduleActivity extends AppCompatActivity {
                     String travelScheduleId = documentReference.getId();
 
                     Log.d("AddScheduleActivity", "Schedule added with ID: " + travelScheduleId);
+                    Toast.makeText(this, "일정이 성공적으로 추가되었습니다!", Toast.LENGTH_SHORT).show();
 
                     Intent resultIntent = new Intent();
                     resultIntent.putExtra("title", title);
                     resultIntent.putExtra("startDate", startDate);
                     resultIntent.putExtra("endDate", endDate);
-                    // 'groupId' 대신 'group' 인텐트 키 사용
                     resultIntent.putExtra("group", group);
                     resultIntent.putExtra("travelScheduleId", travelScheduleId);
                     setResult(RESULT_OK, resultIntent);
@@ -139,6 +163,7 @@ public class AddScheduleActivity extends AppCompatActivity {
                 })
                 .addOnFailureListener(e -> {
                     Log.e("AddScheduleActivity", "Failed to save schedule: " + e.getMessage(), e);
+                    Toast.makeText(this, "일정 저장 실패: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
     }
 }

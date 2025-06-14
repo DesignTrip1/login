@@ -8,7 +8,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
-// import android.widget.Toast; // ⭐ Toast import 제거
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -19,8 +18,12 @@ import com.example.design.R;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.DocumentChange;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class PlanActivity extends AppCompatActivity {
@@ -49,22 +52,13 @@ public class PlanActivity extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         currentUserId = prefs.getString(KEY_USER_ID, null);
 
-        Log.d("PlanActivity", "Loaded currentUserId: " + (currentUserId != null ? currentUserId : "NULL"));
-
-        ImageButton btnBack = findViewById(R.id.btnBack);
-        btnBack.setOnClickListener(v -> finish());
-
-        ImageButton btnAdd = findViewById(R.id.btnAdd);
-        btnAdd.setOnClickListener(v -> {
-            Intent intent = new Intent(this, AddScheduleActivity.class);
-            startActivityForResult(intent, REQUEST_CODE_ADD_PLAN);
-        });
-
-        emptyMessage = findViewById(R.id.emptyMessage);
-        emptyMessage.setOnClickListener(v -> {
-            Intent intent = new Intent(this, AddScheduleActivity.class);
-            startActivityForResult(intent, REQUEST_CODE_ADD_PLAN);
-        });
+        if (currentUserId == null || currentUserId.isEmpty()) {
+            Log.e("PlanActivity", "User ID is null. Cannot load plans. Please ensure user is logged in.");
+            updateEmptyMessageVisibility();
+            // 필요한 경우 로그인 화면으로 이동
+            // finish();
+            return;
+        }
 
         recyclerView = findViewById(R.id.recyclerPlan);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -73,56 +67,70 @@ public class PlanActivity extends AppCompatActivity {
         adapter = new PlanAdapter(planList);
         recyclerView.setAdapter(adapter);
 
+        emptyMessage = findViewById(R.id.emptyMessage);
+
+        ImageButton btnBack = findViewById(R.id.btnBack);
+        btnBack.setOnClickListener(v -> finish());
+
+        ImageButton btnAddPlan = findViewById(R.id.btnAdd);
+        btnAddPlan.setOnClickListener(v -> {
+            Intent intent = new Intent(PlanActivity.this, AddScheduleActivity.class);
+            startActivityForResult(intent, REQUEST_CODE_ADD_PLAN);
+        });
+
         adapter.setOnItemClickListener(position -> {
-            PlanItem selectedPlan = planList.get(position);
+            PlanItem clickedItem = planList.get(position);
             Intent intent = new Intent(PlanActivity.this, DetailScheduleActivity.class);
-            intent.putExtra("travelScheduleId", selectedPlan.getId());
-            intent.putExtra("title", selectedPlan.getTitle());
-            intent.putExtra("startDate", selectedPlan.getStartDate());
-            intent.putExtra("endDate", selectedPlan.getEndDate());
-            intent.putExtra("group", selectedPlan.getGroup()); // 'groupId' 대신 'group' 인텐트 키 사용
+            intent.putExtra("travelScheduleId", clickedItem.getId());
+            intent.putExtra("title", clickedItem.getTitle());
+            intent.putExtra("startDate", clickedItem.getStartDate());
+            intent.putExtra("endDate", clickedItem.getEndDate());
+            intent.putExtra("group", clickedItem.getGroup());
             startActivity(intent);
         });
 
         adapter.setOnDeleteConfirmedListener(position -> {
             PlanItem itemToDelete = planList.get(position);
             deletePlanFromFirestore(itemToDelete);
+            // Firestore 리스너가 삭제 후 UI 업데이트를 자동으로 처리합니다.
         });
+
+        // Firestore 리스너 설정
+        setupFirestoreListener();
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        if (firestoreListener != null) {
-            firestoreListener.remove();
-            firestoreListener = null;
+    protected void onStart() {
+        super.onStart();
+        // onStop에서 리스너가 제거되었다면, onStart에서 다시 설정합니다.
+        if (firestoreListener == null) {
+            setupFirestoreListener();
         }
-        findUserGroupAndLoadPlans();
-        Log.d("PlanActivity", "onResume: Reloading plans.");
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
+    protected void onStop() {
+        super.onStop();
         if (firestoreListener != null) {
             firestoreListener.remove();
             firestoreListener = null;
+            Log.d("PlanActivity", "Firestore listener removed in onStop.");
         }
-        Log.d("PlanActivity", "onPause: Removing Firestore listener.");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        // onStop에서 리스너가 제거되지 않았을 경우를 대비하여 한 번 더 확인합니다.
         if (firestoreListener != null) {
             firestoreListener.remove();
+            Log.d("PlanActivity", "Firestore listener removed in onDestroy.");
         }
-        Log.d("PlanActivity", "onDestroy: Removing Firestore listener.");
     }
 
-    private void findUserGroupAndLoadPlans() {
+    private void setupFirestoreListener() {
         if (currentUserId == null || currentUserId.isEmpty()) {
-            Log.e("PlanActivity", "currentUserId is null or empty. Cannot load schedules.");
+            Log.e("PlanActivity", "Cannot set up Firestore listener: User ID is null or empty.");
             updateEmptyMessageVisibility();
             return;
         }
@@ -131,58 +139,66 @@ public class PlanActivity extends AppCompatActivity {
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        String group = documentSnapshot.getString("group");
-                        if (group != null && !group.isEmpty()) {
-                            loadPlansFilteredByGroup(group);
+                        String userGroup = documentSnapshot.getString("group");
+                        if (userGroup != null && !userGroup.isEmpty()) {
+                            Log.d("PlanActivity", "User is in group: " + userGroup);
+
+                            // 중요: 기존 리스너가 있다면 제거하여 중복 부착 방지
+                            if (firestoreListener != null) {
+                                firestoreListener.remove();
+                            }
+
+                            // Firestore 실시간 리스너 설정
+                            firestoreListener = db.collection("schedules")
+                                    .whereEqualTo("group", userGroup)
+                                    // 'startDate' 또는 'timestamp' (AddScheduleActivity에서 추가했다면)를 기준으로 정렬
+                                    .orderBy("startDate", Query.Direction.ASCENDING)
+                                    .addSnapshotListener((snapshots, e) -> {
+                                        if (e != null) {
+                                            Log.e("PlanActivity", "Failed to load schedules: " + e.getMessage(), e);
+                                            return;
+                                        }
+
+                                        if (snapshots != null) {
+                                            // ⭐ 중요: planList를 완전히 초기화하고 현재 스냅샷으로 다시 채웁니다.
+                                            // 이렇게 하면 중복 추가 문제를 가장 확실하게 방지할 수 있습니다.
+                                            List<PlanItem> newPlanList = new ArrayList<>();
+                                            for (DocumentSnapshot doc : snapshots.getDocuments()) {
+                                                PlanItem item = doc.toObject(PlanItem.class);
+                                                if (item != null) {
+                                                    item.setId(doc.getId()); // 문서 ID 설정
+                                                    newPlanList.add(item);
+                                                }
+                                            }
+
+                                            planList.clear(); // 기존 목록을 비웁니다.
+                                            planList.addAll(newPlanList); // 새 데이터를 추가합니다.
+
+                                            // startDate를 기준으로 정렬 (Firestore 쿼리에서 이미 정렬되었더라도 로컬에서 다시 확인)
+                                            Collections.sort(planList, Comparator.comparing(PlanItem::getStartDate));
+
+                                            adapter.notifyDataSetChanged(); // 어댑터에 데이터 변경 알림
+                                            updateEmptyMessageVisibility(); // 빈 메시지 가시성 업데이트
+                                        }
+                                    });
                         } else {
-                            Log.e("PlanActivity", "Group ID not found or empty in user document: " + currentUserId);
+                            Log.d("PlanActivity", "User is not part of any group or group ID is empty. Clearing plans.");
                             planList.clear();
-                            adapter.setPlanList(planList);
+                            adapter.notifyDataSetChanged();
                             updateEmptyMessageVisibility();
                         }
                     } else {
-                        Log.e("PlanActivity", "User document not found for ID: " + currentUserId + ". Check 'users' collection.");
+                        Log.d("PlanActivity", "User document does not exist for ID: " + currentUserId + ". Clearing plans.");
                         planList.clear();
-                        adapter.setPlanList(planList);
+                        adapter.notifyDataSetChanged();
                         updateEmptyMessageVisibility();
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("PlanActivity", "Failed to get user document: " + e.getMessage(), e);
+                    Log.e("PlanActivity", "Failed to get user document for group ID: " + e.getMessage(), e);
                     planList.clear();
-                    adapter.setPlanList(planList);
+                    adapter.notifyDataSetChanged();
                     updateEmptyMessageVisibility();
-                });
-    }
-
-    private void loadPlansFilteredByGroup(String group) {
-        if (firestoreListener != null) {
-            firestoreListener.remove();
-        }
-
-        firestoreListener = db.collection("schedules")
-                .whereEqualTo("group", group)
-                .orderBy("startDate")
-                .addSnapshotListener((value, error) -> {
-                    if (error != null) {
-                        Log.e("PlanActivity", "Failed to load schedules: " + error.getMessage(), error);
-                        return;
-                    }
-
-                    if (value != null) {
-                        List<PlanItem> newPlanList = new ArrayList<>();
-                        for (DocumentSnapshot doc : value.getDocuments()) {
-                            PlanItem item = doc.toObject(PlanItem.class);
-                            if (item != null) {
-                                item.setId(doc.getId());
-                                newPlanList.add(item);
-                            }
-                        }
-                        planList.clear();
-                        planList.addAll(newPlanList);
-                        adapter.setPlanList(planList);
-                        updateEmptyMessageVisibility();
-                    }
                 });
     }
 
@@ -195,18 +211,21 @@ public class PlanActivity extends AppCompatActivity {
         db.collection("schedules").document(item.getId())
                 .delete()
                 .addOnSuccessListener(aVoid -> {
-                    Log.d("PlanActivity", "Schedule deleted: " + item.getId());
+                    Log.d("PlanActivity", "Schedule deleted from Firestore: " + item.getId());
+                    // 삭제 후 Firestore 리스너가 자동으로 UI를 업데이트할 것입니다.
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("PlanActivity", "Failed to delete schedule: " + e.getMessage(), e);
+                    Log.e("PlanActivity", "Failed to delete schedule from Firestore: " + e.getMessage(), e);
                 });
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE_ADD_PLAN && resultCode == RESULT_OK && data != null) {
-            Log.d("PlanActivity", "New schedule added. Refreshing list.");
+        if (requestCode == REQUEST_CODE_ADD_PLAN && resultCode == RESULT_OK) {
+            // 새 일정이 추가되거나 기존 일정이 저장되었습니다.
+            // Firestore 리스너가 자동으로 목록을 새로 고치므로, 여기서 추가 작업은 필요하지 않습니다.
+            Log.d("PlanActivity", "New schedule added or existing schedule saved. Firestore listener will refresh.");
         }
     }
 

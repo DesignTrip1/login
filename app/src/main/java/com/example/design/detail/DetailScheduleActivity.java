@@ -62,6 +62,9 @@ public class DetailScheduleActivity extends AppCompatActivity implements OnPlace
     // 현재 사용자의 그룹 ID
     private String currentGroupId;
 
+    // 현재 메인 일정의 문서 ID (Firestore에서 일정 저장 후 받게 됨)
+    private String currentTravelScheduleId; // ⭐ 추가
+
     // Fragment에서 마커 선택 다이얼로그 요청 시 어떤 DayFragment에서 요청했는지 추적하기 위한 변수
     private int requestingDayPosition = -1; // -1은 Activity에서 요청했음을 의미
 
@@ -87,16 +90,43 @@ public class DetailScheduleActivity extends AppCompatActivity implements OnPlace
             return;
         }
 
+        Intent intent = getIntent();
+        String startDate = intent.getStringExtra("startDate");
+        String endDate = intent.getStringExtra("endDate");
+        String scheduleName = intent.getStringExtra("scheduleName");
+        // PlanActivity에서 넘어온 travelScheduleId가 있다면 받습니다.
+        currentTravelScheduleId = intent.getStringExtra("travelScheduleId"); // ⭐ travelScheduleId 받기
+
+
+        // 그룹 정보 로드는 비동기적이므로, 로드 완료 후 dayPagerAdapter를 초기화해야 합니다.
         groupRepository.loadCurrentGroup(currentUserId, new GroupRepository.FirestoreCallback<GroupItem>() {
             @Override
             public void onSuccess(GroupItem groupItem) {
                 if (groupItem != null) {
                     currentGroupId = groupItem.groupId;
                     Log.d("DetailScheduleActivity", "Current user is in group: " + currentGroupId);
+
+                    // 그룹 정보 로드 완료 후 ViewPager와 DayPagerAdapter 설정
+                    dayTitles = generateDayList(startDate, endDate);
+                    // ⭐ DayPagerAdapter 생성자에 travelScheduleId와 currentGroupId 전달
+                    dayPagerAdapter = new DayPagerAdapter(DetailScheduleActivity.this, dayTitles, DetailScheduleActivity.this, currentTravelScheduleId, currentGroupId);
+                    viewPager.setAdapter(dayPagerAdapter);
+
+                    new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
+                        tab.setText(dayTitles.get(position));
+                    }).attach();
+
+                    // 기존 일정 정보가 있으면 로드 (선택된 장소 정보)
+                    if (currentTravelScheduleId != null && !currentTravelScheduleId.isEmpty()) {
+                        loadScheduleDetailsFromFirestore(currentTravelScheduleId);
+                    }
+
                 } else {
                     currentGroupId = null;
                     Toast.makeText(DetailScheduleActivity.this, "사용자가 속한 그룹이 없습니다. 그룹을 생성하거나 가입해주세요.", Toast.LENGTH_LONG).show();
                     Log.d("DetailScheduleActivity", "사용자가 속한 그룹이 없습니다.");
+                    // 그룹이 없으면 일정 진행 불가능하므로 액티비티 종료
+                    finish();
                 }
             }
 
@@ -105,21 +135,9 @@ public class DetailScheduleActivity extends AppCompatActivity implements OnPlace
                 currentGroupId = null;
                 Toast.makeText(DetailScheduleActivity.this, "그룹 정보 로드 실패: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 Log.e("DetailScheduleActivity", "Failed to load current group: " + e.getMessage());
+                finish(); // 그룹 정보 로드 실패 시 액티비티 종료
             }
         });
-
-        Intent intent = getIntent();
-        String startDate = intent.getStringExtra("startDate");
-        String endDate = intent.getStringExtra("endDate");
-        String scheduleName = intent.getStringExtra("scheduleName");
-
-        dayTitles = generateDayList(startDate, endDate);
-        dayPagerAdapter = new DayPagerAdapter(this, dayTitles, this);
-        viewPager.setAdapter(dayPagerAdapter);
-
-        new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
-            tab.setText(dayTitles.get(position));
-        }).attach();
     }
 
     // OnPlaceSelectedListener 인터페이스 구현 메서드
@@ -356,7 +374,14 @@ public class DetailScheduleActivity extends AppCompatActivity implements OnPlace
             return;
         }
 
-        String scheduleId = UUID.randomUUID().toString();
+        String scheduleId;
+        if (currentTravelScheduleId != null && !currentTravelScheduleId.isEmpty()) {
+            scheduleId = currentTravelScheduleId; // 이미 존재하는 일정이라면 ID 재사용
+        } else {
+            scheduleId = UUID.randomUUID().toString(); // 새 일정이라면 새 ID 생성
+        }
+        currentTravelScheduleId = scheduleId; // 현재 액티비티에 ID 저장
+
         // ★★★ 핵심 변경 사항: 최상위 "schedules" 컬렉션 아래에 일정을 저장
         DocumentReference scheduleRef = db.collection("schedules").document(scheduleId);
 
@@ -393,11 +418,45 @@ public class DetailScheduleActivity extends AppCompatActivity implements OnPlace
         batch.commit()
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(this, "일정이 성공적으로 저장되었습니다.", Toast.LENGTH_SHORT).show();
+                    // DayPagerAdapter가 이미 초기화되었을 경우, travelScheduleId를 업데이트하거나
+                    // 다시 초기화하여 Fragment들이 새로운 ID를 사용하도록 할 수 있습니다.
+                    // 이 시점에는 이미 초기화되어 있으므로, 굳이 다시 초기화하지 않아도 DayFragment 내에서
+                    // travelScheduleId가 사용되므로 문제가 없습니다.
+                    // PlanActivity로 돌아가기 위해 setResult와 finish()를 호출
+                    Intent resultIntent = new Intent();
+                    resultIntent.putExtra("travelScheduleId", currentTravelScheduleId);
+                    setResult(RESULT_OK, resultIntent);
                     finish(); // 저장 성공 시 액티비티 종료
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "일정 저장 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     Log.e("DetailScheduleActivity", "Error saving schedule: " + e.getMessage());
+                });
+    }
+
+    // ⭐ 기존 일정의 dayDetails 데이터를 로드하는 메서드 (새로 추가되거나 수정된 경우 호출)
+    private void loadScheduleDetailsFromFirestore(String scheduleId) {
+        db.collection("schedules").document(scheduleId)
+                .collection("dayDetails")
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    selectedPlacesPerDay.clear();
+                    for (DocumentSnapshot document : queryDocumentSnapshots) {
+                        String dayTitle = document.getId(); // 문서 ID가 Day title ("Day 1", "Day 2" 등)
+                        List<String> places = (List<String>) document.get("places");
+                        if (dayTitle != null && places != null) {
+                            selectedPlacesPerDay.put(dayTitle, places);
+                            // 해당 DayFragment에 로드된 장소 정보 전달 (필요하다면)
+                            // 현재는 DayFragment가 자체적으로 상세 일정을 로드하므로 여기서는 메인 일정의 장소만 처리
+                            // 만약 각 DayFragment에 할당된 장소 목록을 보여줘야 한다면 여기서 해당 DayFragment를 찾아 업데이트 로직 추가
+                        }
+                    }
+                    Log.d("DetailScheduleActivity", "Loaded existing day details: " + selectedPlacesPerDay.size() + " days.");
+                    // UI 업데이트가 필요하다면 여기서 수행
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("DetailScheduleActivity", "Error loading existing schedule details: " + e.getMessage());
+                    Toast.makeText(this, "기존 일정 상세 정보 로드 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 }
