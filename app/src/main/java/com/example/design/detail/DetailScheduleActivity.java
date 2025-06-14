@@ -9,38 +9,33 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ArrayAdapter; // 사용되지 않는 import 제거 가능
 import android.widget.Button;
-import android.widget.ListView; // 사용되지 않는 import 제거 가능
-import android.widget.TextView; // TextView import 추가 (사용되므로)
+import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull; // 사용되지 않는 import 제거 가능
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.design.R;
-import com.example.design.group.GroupItem; // GroupItem import
-import com.example.design.group.GroupRepository; // GroupRepository import
+import com.example.design.group.GroupItem;
+import com.example.design.group.GroupRepository;
 import com.example.design.schedule.DayPagerAdapter;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QuerySnapshot; // 사용되지 않는 import 제거 가능
 import com.google.firebase.firestore.SetOptions;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections; // Collections import
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set; // Set import
-import java.util.UUID; // UUID import
+import java.util.UUID;
 
 public class DetailScheduleActivity extends AppCompatActivity {
 

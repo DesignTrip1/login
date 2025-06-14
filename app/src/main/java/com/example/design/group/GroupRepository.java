@@ -1,5 +1,3 @@
-// com/example/design/group/GroupRepository.java
-
 package com.example.design.group;
 
 import android.content.Context;
@@ -34,12 +32,8 @@ public class GroupRepository {
         void onFailure(Exception e);
     }
 
-    /**
-     * Firestore에서 현재 사용자의 친구 목록을 불러옵니다.
-     *
-     * @param userId 현재 사용자 ID
-     * @param callback 친구 목록을 받을 콜백
-     */
+    //Firestore에서 현재 사용자의 친구 목록을 불러옵니다.
+
     public void loadFriends(String userId, FirestoreCallback<List<String>> callback) {
         db.collection("users").document(userId)
                 .get()
@@ -57,13 +51,9 @@ public class GroupRepository {
                 });
     }
 
-    /**
-     * Firestore에서 친구를 삭제합니다 (양방향 삭제).
-     *
-     * @param currentUserId 현재 사용자 ID
-     * @param friendIdToDelete 삭제할 친구 ID
-     * @param callback 삭제 결과를 받을 콜백
-     */
+
+    //Firestore에서 친구를 삭제합니다 (양방향 삭제).
+
     public void deleteFriend(String currentUserId, String friendIdToDelete, FirestoreCallback<Void> callback) {
         Task<Void> user1Update = db.collection("users").document(currentUserId)
                 .update("friends", FieldValue.arrayRemove(friendIdToDelete));
@@ -81,14 +71,7 @@ public class GroupRepository {
                     callback.onFailure(e);
                 });
     }
-
-    /**
-     * 친구 요청을 보냅니다.
-     *
-     * @param fromUserId 요청을 보내는 사용자 ID
-     * @param toUserId 요청을 받을 사용자 ID
-     * @param callback 요청 결과를 받을 콜백
-     */
+    //친구 요청을 보냅니다.
     public void sendFriendRequest(String fromUserId, String toUserId, FirestoreCallback<Void> callback) {
         Map<String, Object> request = new HashMap<>();
         request.put("fromUserId", fromUserId);
@@ -107,12 +90,8 @@ public class GroupRepository {
                 });
     }
 
-    /**
-     * 현재 사용자에게 온 친구 요청 목록을 불러옵니다.
-     *
-     * @param toUserId 현재 사용자 ID
-     * @param callback 친구 요청 목록(QuerySnapshot)을 받을 콜백
-     */
+    //현재 사용자에게 온 친구 요청 목록을 불러옵니다.
+
     public void loadFriendRequests(String toUserId, FirestoreCallback<QuerySnapshot> callback) {
         db.collection("friend_requests")
                 .whereEqualTo("toUserId", toUserId)
@@ -123,15 +102,8 @@ public class GroupRepository {
                     callback.onFailure(e);
                 });
     }
+    // 친구 요청을 수락합니다.
 
-    /**
-     * 친구 요청을 수락합니다.
-     *
-     * @param requestId 친구 요청 문서 ID
-     * @param currentUserId 현재 사용자 ID (요청을 받는 사람)
-     * @param fromUserId 요청을 보낸 사용자 ID
-     * @param callback 수락 결과를 받을 콜백
-     */
     public void acceptFriendRequest(String requestId, String currentUserId, String fromUserId, FirestoreCallback<Void> callback) {
         Task<Void> user1Update = db.collection("users").document(currentUserId)
                 .update("friends", FieldValue.arrayUnion(fromUserId));
@@ -157,12 +129,8 @@ public class GroupRepository {
                 });
     }
 
-    /**
-     * 친구 요청을 거절합니다.
-     *
-     * @param requestId 친구 요청 문서 ID
-     * @param callback 거절 결과를 받을 콜백
-     */
+    //친구 요청을 거절합니다.
+
     public void rejectFriendRequest(String requestId, FirestoreCallback<Void> callback) {
         db.collection("friend_requests").document(requestId)
                 .delete()
@@ -175,15 +143,8 @@ public class GroupRepository {
                 });
     }
 
-    /**
-     * 새로운 그룹을 생성합니다.
-     * **사용자가 이미 그룹에 속해 있다면 그룹 생성을 허용하지 않습니다.**
-     *
-     * @param currentUserId 현재 사용자 ID
-     * @param groupName 생성할 그룹 이름
-     * @param members 그룹에 포함될 멤버 ID 목록
-     * @param callback 그룹 생성 결과를 받을 콜백
-     */
+    //사용자가 이미 그룹에 속해 있다면 그룹 생성을 허용하지 않습니다.**
+
     public void createGroup(String currentUserId, String groupName, Set<String> members, FirestoreCallback<GroupItem> callback) {
         db.collection("users").document(currentUserId).get()
                 .addOnSuccessListener(userDoc -> {
@@ -219,8 +180,7 @@ public class GroupRepository {
                 .add(groupData)
                 .addOnSuccessListener(documentReference -> {
                     String groupId = documentReference.getId();
-                    GroupItem newGroup = new GroupItem(groupId, groupName);
-
+                    GroupItem newGroup = new GroupItem(groupId, groupName, currentUserId, new ArrayList<>(members));
                     db.collection("users").document(currentUserId)
                             .update("group", groupId)
                             .addOnSuccessListener(aVoid -> Log.d("GroupRepository", "사용자 group 필드 업데이트 완료: " + groupId))
@@ -251,12 +211,9 @@ public class GroupRepository {
                 });
     }
 
-    /**
-     * 현재 사용자가 속한 단일 그룹을 Firestore에서 불러옵니다.
-     *
-     * @param currentUserId 현재 사용자 ID
-     * @param callback 그룹 정보를 받을 콜백 (속한 그룹이 없으면 null 반환)
-     */
+
+    //현재 사용자가 속한 단일 그룹을 Firestore에서 불러옵니다.
+
     public void loadCurrentGroup(String currentUserId, FirestoreCallback<GroupItem> callback) {
         db.collection("users").document(currentUserId).get()
                 .addOnSuccessListener(userDoc -> {
@@ -272,18 +229,22 @@ public class GroupRepository {
                                 .addOnSuccessListener(groupDoc -> {
                                     if (groupDoc.exists()) {
                                         String retrievedGroupName = groupDoc.getString("groupName");
-                                        if (retrievedGroupName != null) {
-                                            callback.onSuccess(new GroupItem(groupId, retrievedGroupName));
+                                        // if (retrievedGroupName != null) { 이 부분 대신 아래 코드 사용
+                                        GroupItem groupItem = groupDoc.toObject(GroupItem.class);
+                                        if (groupItem != null) {
+                                            groupItem.groupId = groupDoc.getId(); // 문서 ID를 GroupItem의 groupId 필드에 설정
+                                            callback.onSuccess(groupItem);
                                         } else {
-                                            Log.w("GroupRepository", "그룹 문서에 groupName 필드가 없거나 유효하지 않음: " + groupId);
-                                            callback.onSuccess(null);
+                                            Log.w("GroupRepository", "그룹 문서 데이터가 GroupItem으로 변환되지 않음: " + groupId);
+                                            callback.onSuccess(null); // 변환 실패 시 null 반환
                                         }
                                     } else {
                                         Log.w("GroupRepository", "사용자의 group ID에 해당하는 그룹 문서가 존재하지 않음: " + groupId);
+                                        // ⭐ 변경됨: FieldValue.delete() 대신 null로 업데이트
                                         db.collection("users").document(currentUserId)
-                                                .update("group", FieldValue.delete())
-                                                .addOnSuccessListener(aVoid -> Log.d("GroupRepository", "유저의 잘못된 group 필드 삭제 완료"))
-                                                .addOnFailureListener(e -> Log.e("GroupRepository", "유저의 잘못된 group 필드 삭제 실패", e));
+                                                .update("group", null)
+                                                .addOnSuccessListener(aVoid -> Log.d("GroupRepository", "유저의 잘못된 group 필드 null로 업데이트 완료"))
+                                                .addOnFailureListener(e -> Log.e("GroupRepository", "유저의 잘못된 group 필드 null로 업데이트 실패", e));
                                         callback.onSuccess(null);
                                     }
                                 })
@@ -303,11 +264,8 @@ public class GroupRepository {
                 });
     }
 
-    /**
-     * 특정 그룹의 멤버 목록을 불러옵니다.
-     * @param groupId 그룹 ID
-     * @param callback 멤버 목록을 받을 콜백
-     */
+    //특정 그룹의 멤버 목록을 불러옵니다.
+
     public void loadGroupMembers(String groupId, FirestoreCallback<List<String>> callback) {
         db.collection("groups").document(groupId).get()
                 .addOnSuccessListener(groupDoc -> {
@@ -324,12 +282,9 @@ public class GroupRepository {
                 });
     }
 
-    /**
-     * 현재 사용자에게 온 그룹 초대 목록을 불러옵니다.
-     *
-     * @param inviteeUserId 초대받은 사용자 ID
-     * @param callback 초대 목록(QuerySnapshot)을 받을 콜백
-     */
+
+    //현재 사용자에게 온 그룹 초대 목록을 불러옵니다.
+
     public void loadInvitations(String inviteeUserId, FirestoreCallback<QuerySnapshot> callback) {
         db.collection("invitations")
                 .whereEqualTo("inviteeUserId", inviteeUserId)
@@ -341,14 +296,8 @@ public class GroupRepository {
                 });
     }
 
-    /**
-     * 그룹 초대를 보냅니다. (Task 반환 버전)
-     *
-     * @param groupId 초대할 그룹 ID
-     * @param inviterUserId 초대한 사용자 ID
-     * @param inviteeUserId 초대받을 사용자 ID
-     * @return 작업 Task
-     */
+
+    //그룹 초대를 보냅니다. (Task 반환 버전)
     private Task<Void> sendInvitationTask(String groupId, String inviterUserId, String inviteeUserId) {
         Map<String, Object> invitation = new HashMap<>();
         invitation.put("groupId", groupId);
@@ -360,16 +309,7 @@ public class GroupRepository {
                 .add(invitation)
                 .continueWith(task -> null);
     }
-
-    /**
-     * 그룹 초대를 수락합니다.
-     * 기존 그룹에서 탈퇴 처리 후 새로운 그룹에 가입시킵니다.
-     *
-     * @param invitationId 초대 문서 ID
-     * @param newGroupId 수락할 그룹 ID
-     * @param currentUserId 현재 사용자 ID
-     * @param callback 수락 결과를 받을 콜백
-     */
+    //그룹 초대를 수락합니다.
     public void acceptInvitation(String invitationId, String newGroupId, String currentUserId, FirestoreCallback<Void> callback) {
         db.collection("users").document(currentUserId).get()
                 .addOnSuccessListener(userDoc -> {
@@ -458,8 +398,6 @@ public class GroupRepository {
             callback.onFailure(new IllegalArgumentException("Group ID cannot be null or empty."));
             return;
         }
-
-        // Firestore의 'groups' 컬렉션에서 해당 그룹 문서를 찾아 'members' 필드를 업데이트합니다.
         db.collection("groups").document(groupId)
                 .update("members", newMembers) // 'members' 필드를 새 리스트로 덮어씌웁니다.
                 .addOnSuccessListener(aVoid -> {
@@ -473,10 +411,8 @@ public class GroupRepository {
                     callback.onFailure(e);
                 });
     }
-
-    // ⭐ 추가: 모든 친구 목록을 가져오는 메서드 (예시, 실제 구현은 사용자 친구 목록에 따라 달라짐)
     // 이 메서드는 'users' 컬렉션의 특정 필드에서 친구 ID를 가져온다고 가정합니다.
-    // 실제 친구 목록 데이터 구조에 맞게 수정해야 합니다.
+
     public void getAllFriends(String currentUserId, FirestoreCallback<Set<String>> callback) {
         if (currentUserId == null || currentUserId.isEmpty()) {
             callback.onFailure(new IllegalArgumentException("Current User ID is null or empty."));
@@ -487,8 +423,7 @@ public class GroupRepository {
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists() && documentSnapshot.contains("friends")) {
-                        // 'friends' 필드가 List<String> 형태라고 가정합니다.
-                        // 실제 데이터 구조에 따라 Map이거나 다른 형태일 수 있습니다.
+
                         List<String> friendsList = (List<String>) documentSnapshot.get("friends");
                         if (friendsList != null) {
                             callback.onSuccess(new java.util.HashSet<>(friendsList));
@@ -505,11 +440,56 @@ public class GroupRepository {
                     callback.onFailure(e);
                 });
     }
-    /**
-     * 그룹을 삭제합니다. 그룹의 모든 멤버를 탈퇴 처리한 후, 해당 그룹에 속한 마커들을 삭제하고 마지막으로 그룹 문서를 삭제합니다.
-     * @param groupId 삭제할 그룹 ID
-     * @param callback 삭제 결과를 받을 콜백
-     */
+
+    //그룹을 삭제합니다. 그룹의 모든 멤버를 탈퇴 처리한 후, 해당 그룹에 속한 마커들을 삭제하고 마지막으로 그룹 문서를 삭제합니다.
+
+    public void leaveGroup(String groupId, String userIdToLeave, FirestoreCallback<Void> callback) {
+        // 1. groups 컬렉션에서 해당 그룹의 members 배열에서 사용자 ID 제거
+        db.collection("groups").document(groupId)
+                .update("members", FieldValue.arrayRemove(userIdToLeave))
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("GroupRepository", "그룹(" + groupId + ") 멤버에서 " + userIdToLeave + " 제거 성공.");
+
+                    // 2. users 컬렉션에서 해당 사용자의 'group' 필드 null로 업데이트
+                    // ⭐ 변경됨: FieldValue.delete() 대신 null로 업데이트
+                    db.collection("users").document(userIdToLeave)
+                            .update("group", null)
+                            .addOnSuccessListener(aVoid1 -> {
+                                Log.d("GroupRepository", userIdToLeave + "의 'group' 필드를 null로 업데이트 성공.");
+
+                                // 3. 그룹에 남은 멤버가 없으면 그룹 문서 자체를 삭제 (선택 사항)
+                                db.collection("groups").document(groupId).get()
+                                        .addOnSuccessListener(groupDoc -> {
+                                            if (groupDoc.exists()) {
+                                                List<String> currentMembers = (List<String>) groupDoc.get("members");
+                                                if (currentMembers == null || currentMembers.isEmpty()) {
+                                                    // 남은 멤버가 없으므로 그룹 삭제
+                                                    db.collection("groups").document(groupId).delete()
+                                                            .addOnSuccessListener(aVoid2 -> Log.d("GroupRepository", "빈 그룹(" + groupId + ") 자동 삭제 완료."))
+                                                            .addOnFailureListener(e -> Log.e("GroupRepository", "빈 그룹(" + groupId + ") 자동 삭제 실패: " + e.getMessage()));
+                                                }
+                                            }
+                                            Toast.makeText(context, "그룹을 성공적으로 탈퇴했습니다.", Toast.LENGTH_SHORT).show();
+                                            callback.onSuccess(null);
+                                        })
+                                        .addOnFailureListener(e -> {
+                                            Log.e("GroupRepository", "탈퇴 후 그룹 멤버 확인 실패: " + e.getMessage());
+                                            Toast.makeText(context, "그룹 탈퇴는 완료되었으나, 그룹 상태 확인 중 오류 발생: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                            callback.onFailure(e); // 그룹 탈퇴는 성공했지만, 후처리 실패로 볼 수도 있음
+                                        });
+                            })
+                            .addOnFailureListener(e -> {
+                                Log.e("GroupRepository", userIdToLeave + "의 'group' 필드 null 업데이트 실패: " + e.getMessage());
+                                Toast.makeText(context, "그룹 탈퇴 중 사용자 정보 업데이트 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                callback.onFailure(e);
+                            });
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("GroupRepository", "그룹(" + groupId + ") 멤버에서 " + userIdToLeave + " 제거 실패: " + e.getMessage());
+                    Toast.makeText(context, "그룹 탈퇴 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    callback.onFailure(e);
+                });
+    }
     public void deleteGroup(String groupId, FirestoreCallback<Void> callback) {
         db.collection("groups").document(groupId).get()
                 .addOnSuccessListener(groupDoc -> {
@@ -517,24 +497,22 @@ public class GroupRepository {
                         List<String> members = (List<String>) groupDoc.get("members");
                         List<Task<Void>> tasks = new ArrayList<>();
 
-                        // 1. 모든 멤버의 'group' 필드 초기화 (필드 자체를 제거)
                         if (members != null && !members.isEmpty()) {
                             for (String memberId : members) {
+                                // ⭐ 변경됨: FieldValue.delete() 대신 null로 업데이트
                                 tasks.add(db.collection("users").document(memberId)
-                                        .update("group", FieldValue.delete())
-                                        .addOnFailureListener(e -> Log.e("GroupRepository", "멤버(" + memberId + ")의 group 필드 삭제 실패", e)));
+                                        .update("group", null)
+                                        .addOnFailureListener(e -> Log.e("GroupRepository", "멤버(" + memberId + ")의 group 필드 null 업데이트 실패", e)));
                             }
                         }
 
                         Tasks.whenAllComplete(tasks)
                                 .addOnSuccessListener(aVoid -> {
-                                    // 2. 해당 그룹에 속한 마커들을 삭제
-                                    db.collection("markers") // 마커 컬렉션 이름은 실제 프로젝트에 맞게 수정해주세요.
+                                    db.collection("markers")
                                             .whereEqualTo("groupId", groupId)
                                             .get()
                                             .addOnSuccessListener(querySnapshot -> {
                                                 List<Task<Void>> markerDeletionTasks = new ArrayList<>();
-                                                // Corrected line: Use DocumentSnapshot
                                                 for (DocumentSnapshot docSnapshot : querySnapshot.getDocuments()) {
                                                     markerDeletionTasks.add(docSnapshot.getReference().delete()); // Get DocumentReference for deletion
                                                 }
@@ -601,12 +579,7 @@ public class GroupRepository {
                     callback.onFailure(e);
                 });
     }
-    /**
-     * 그룹 초대를 거절합니다.
-     *
-     * @param invitationId 초대 요청 문서 ID
-     * @param callback 거절 결과를 받을 콜백
-     */
+    //그룹 초대를 거절합니다.
     public void rejectInvitation(String invitationId, FirestoreCallback<Void> callback) {
         deleteInvitation(invitationId, new FirestoreCallback<Void>() {
             @Override
@@ -621,13 +594,8 @@ public class GroupRepository {
             }
         });
     }
+    //초대장을 Firestore에서 삭제합니다.
 
-    /**
-     * 초대장을 Firestore에서 삭제합니다.
-     *
-     * @param invitationId 삭제할 초대 문서 ID
-     * @param callback 삭제 결과를 받을 콜백
-     */
     public void deleteInvitation(String invitationId, FirestoreCallback<Void> callback) {
         db.collection("invitations").document(invitationId)
                 .delete()
@@ -637,13 +605,7 @@ public class GroupRepository {
                     callback.onFailure(e);
                 });
     }
-
-    /**
-     * 그룹 ID를 이용해 그룹 이름을 가져옵니다.
-     *
-     * @param groupId 그룹 ID
-     * @param callback 그룹 이름을 받을 콜백
-     */
+    //그룹 ID를 이용해 그룹 이름을 가져옵니다.
     public void getGroupName(String groupId, FirestoreCallback<String> callback) {
         db.collection("groups").document(groupId).get()
                 .addOnSuccessListener(groupDoc -> {
@@ -656,6 +618,29 @@ public class GroupRepository {
                 .addOnFailureListener(e -> {
                     Log.e("GroupRepository", "그룹 이름 로드 실패: " + e.getMessage());
                     callback.onFailure(e);
+                });
+    }
+
+    /**
+     * 그룹 이름을 업데이트합니다.
+     * @param groupId 업데이트할 그룹의 ID.
+     * @param newGroupName 새로 설정할 그룹 이름.
+     * @param callback Firestore 작업의 성공 또는 실패를 처리할 콜백.
+     */
+    public void updateGroupName(String groupId, String newGroupName, FirestoreCallback<Void> callback) {
+        DocumentReference groupRef = db.collection("groups").document(groupId);
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("groupName", newGroupName); // 'groupName' 필드를 업데이트합니다.
+
+        groupRef.update(updates)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("GroupRepository", "Group name successfully updated for groupId: " + groupId);
+                    callback.onSuccess(null); // 성공 시 콜백 호출
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("GroupRepository", "Error updating group name for groupId: " + groupId, e);
+                    callback.onFailure(e); // 실패 시 콜백 호출
                 });
     }
 }
