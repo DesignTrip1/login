@@ -26,6 +26,7 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.DocumentReference; // 추가: DocumentReference 임포트
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,8 +50,8 @@ public class DayFragment extends Fragment {
 
     private TextView textDayTitle;
     private TextView editStartTime, editEndTime;
-    private EditText editPlace, editMemo; // editPlace는 EditText입니다.
-    private Button btnAddSchedule; // btnSelectPlace는 더 이상 필요 없음
+    private EditText editPlace, editMemo;
+    private Button btnAddSchedule;
 
     private RecyclerView recyclerView;
     private DayScheduleAdapter adapter;
@@ -106,12 +107,11 @@ public class DayFragment extends Fragment {
         textDayTitle = view.findViewById(R.id.textDayTitle);
         editStartTime = view.findViewById(R.id.editStartTime);
         editEndTime = view.findViewById(R.id.editEndTime);
-        editPlace = view.findViewById(R.id.editPlace); // EditText로 선언되어 있음
+        editPlace = view.findViewById(R.id.editPlace);
         editMemo = view.findViewById(R.id.editMemo);
         btnAddSchedule = view.findViewById(R.id.btnAddSchedule);
-        // btnSelectPlace는 제거합니다.
 
-        recyclerView = view.findViewById(R.id.recyclerSchedule); // ID 변경 확인: recyclerViewDaySchedule -> recyclerSchedule
+        recyclerView = view.findViewById(R.id.recyclerSchedule);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         scheduleList = new ArrayList<>();
@@ -133,11 +133,8 @@ public class DayFragment extends Fragment {
         editStartTime.setOnClickListener(v -> showTimePicker(editStartTime));
         editEndTime.setOnClickListener(v -> showTimePicker(editEndTime));
 
-        // ⭐ editPlace 클릭 리스너 설정: 이전에 btnSelectPlace에 연결했던 로직을 여기에 연결합니다.
         editPlace.setOnClickListener(v -> {
             if (placeSelectedListener != null) {
-                // Activity에 마커 선택 다이얼로그 요청
-                // 현재 editPlace의 텍스트와 현재 DayFragment의 position을 전달합니다.
                 placeSelectedListener.onPlaceSelected(editPlace.getText().toString(), dayPosition);
             }
         });
@@ -171,10 +168,6 @@ public class DayFragment extends Fragment {
         return view;
     }
 
-    /**
-     * Activity로부터 선택된 마커 이름을 받아와 EditText에 설정하는 메서드입니다.
-     * @param placeName 선택된 마커 이름
-     */
     public void setPlaceText(String placeName) {
         if (editPlace != null) {
             editPlace.setText(placeName);
@@ -241,6 +234,35 @@ public class DayFragment extends Fragment {
                     Collections.sort(scheduleList, Comparator.comparing(ScheduleItem::getStartTime));
                     adapter.notifyDataSetChanged();
                     Toast.makeText(getContext(), "일정 추가 및 저장 완료!", Toast.LENGTH_SHORT).show();
+
+                    // ⭐ 추가된 로직: 마커의 isSelected 필드를 true로 업데이트 ⭐
+                    if (!TextUtils.isEmpty(place) && currentGroupId != null && !currentGroupId.isEmpty()) {
+                        db.collection("markers")
+                                .whereEqualTo("group", currentGroupId)
+                                .whereEqualTo("name", place)
+                                .get()
+                                .addOnSuccessListener(markerQuerySnapshots -> {
+                                    if (!markerQuerySnapshots.isEmpty()) {
+                                        // 해당 이름과 그룹에 일치하는 마커가 있다면 (첫 번째 문서)
+                                        DocumentReference markerRef = markerQuerySnapshots.getDocuments().get(0).getReference();
+                                        markerRef.update("isSelected", true)
+                                                .addOnSuccessListener(aVoid -> {
+                                                    Log.d("DayFragment", "Marker '" + place + "' isSelected updated to true.");
+                                                })
+                                                .addOnFailureListener(e -> {
+                                                    Log.e("DayFragment", "Failed to update isSelected for marker '" + place + "': " + e.getMessage());
+                                                    // 토스트 메시지는 너무 빈번할 수 있어 여기서는 주석 처리했습니다. 필요 시 활성화하세요.
+                                                    // Toast.makeText(getContext(), "마커 상태 업데이트 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                });
+                                    } else {
+                                        Log.w("DayFragment", "No marker found for place: " + place + " in group: " + currentGroupId + ". Cannot update isSelected.");
+                                    }
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e("DayFragment", "Error querying markers for place '" + place + "': " + e.getMessage());
+                                    // Toast.makeText(getContext(), "마커 조회 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                });
+                    }
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(getContext(), "일정 저장 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -288,6 +310,9 @@ public class DayFragment extends Fragment {
             return;
         }
 
+        // 삭제할 장소 이름 가져오기 (마커 isSelected를 다시 false로 변경하려면 필요)
+        String placeToDelete = scheduleList.get(position).getPlace(); // 현재 삭제하려는 아이템의 장소 이름
+
         db.collection("schedules")
                 .document(travelScheduleId)
                 .collection("dayDetails")
@@ -299,6 +324,30 @@ public class DayFragment extends Fragment {
                     scheduleList.remove(position);
                     adapter.notifyItemRemoved(position);
                     Toast.makeText(getContext(), "일정이 삭제되었습니다.", Toast.LENGTH_SHORT).show();
+
+                    // ⭐ 추가된 로직: 마커의 isSelected 필드를 false로 업데이트 ⭐
+                    // 이 마커가 다른 일정에도 사용되지 않는다는 보장이 있을 때만 실행해야 합니다.
+                    // 복잡성을 줄이려면 이 로직을 DetailScheduleActivity의 최종 저장 시에만 두는 것이 좋습니다.
+                    // 현재는 DayFragment에서 추가 시 true로, 삭제 시 false로 변경하도록 예시를 제공하지만,
+                    // 이 부분이 앱의 전체적인 'isSelected' 논리와 충돌할 수 있습니다.
+                    if (!TextUtils.isEmpty(placeToDelete) && currentGroupId != null && !currentGroupId.isEmpty()) {
+                        db.collection("markers")
+                                .whereEqualTo("group", currentGroupId)
+                                .whereEqualTo("name", placeToDelete)
+                                .get()
+                                .addOnSuccessListener(markerQuerySnapshots -> {
+                                    if (!markerQuerySnapshots.isEmpty()) {
+                                        DocumentReference markerRef = markerQuerySnapshots.getDocuments().get(0).getReference();
+                                        markerRef.update("isSelected", false)
+                                                .addOnSuccessListener(result -> {
+                                                    Log.d("DayFragment", "Marker '" + placeToDelete + "' isSelected updated to false on delete.");
+                                                })
+                                                .addOnFailureListener(e -> {
+                                                    Log.e("DayFragment", "Failed to update isSelected for marker '" + placeToDelete + "' on delete: " + e.getMessage());
+                                                });
+                                    }
+                                });
+                    }
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(getContext(), "일정 삭제 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -311,6 +360,9 @@ public class DayFragment extends Fragment {
             Toast.makeText(getContext(), "수정할 일정 정보가 부족합니다.", Toast.LENGTH_SHORT).show();
             return;
         }
+
+        // 기존 장소 이름
+        String oldPlace = scheduleList.get(position).getPlace();
 
         Map<String, Object> updates = new HashMap<>();
         updates.put("startTime", newStartTime);
@@ -331,6 +383,53 @@ public class DayFragment extends Fragment {
                     Collections.sort(scheduleList, Comparator.comparing(ScheduleItem::getStartTime));
                     adapter.notifyDataSetChanged();
                     Toast.makeText(getContext(), "일정이 수정되었습니다.", Toast.LENGTH_SHORT).show();
+
+                    // ⭐ 추가된 로직: 장소 변경 시 이전 마커 isSelected false, 새 마커 isSelected true로 업데이트 ⭐
+                    // 이 역시 복잡성을 고려해야 합니다. 아래 설명을 참고하세요.
+                    /*
+                    if (!oldPlace.equals(newPlace)) { // 장소 이름이 변경되었을 경우
+                        // 이전 마커 isSelected false로 변경
+                        if (!TextUtils.isEmpty(oldPlace) && currentGroupId != null && !currentGroupId.isEmpty()) {
+                            db.collection("markers")
+                                    .whereEqualTo("group", currentGroupId)
+                                    .whereEqualTo("name", oldPlace)
+                                    .get()
+                                    .addOnSuccessListener(oldMarkerSnapshots -> {
+                                        if (!oldMarkerSnapshots.isEmpty()) {
+                                            DocumentReference oldMarkerRef = oldMarkerSnapshots.getDocuments().get(0).getReference();
+                                            oldMarkerRef.update("isSelected", false);
+                                        }
+                                    });
+                        }
+
+                        // 새 마커 isSelected true로 변경
+                        if (!TextUtils.isEmpty(newPlace) && currentGroupId != null && !currentGroupId.isEmpty()) {
+                            db.collection("markers")
+                                    .whereEqualTo("group", currentGroupId)
+                                    .whereEqualTo("name", newPlace)
+                                    .get()
+                                    .addOnSuccessListener(newMarkerSnapshots -> {
+                                        if (!newMarkerSnapshots.isEmpty()) {
+                                            DocumentReference newMarkerRef = newMarkerSnapshots.getDocuments().get(0).getReference();
+                                            newMarkerRef.update("isSelected", true);
+                                        }
+                                    });
+                        }
+                    } else if (!TextUtils.isEmpty(newPlace) && currentGroupId != null && !currentGroupId.isEmpty()) {
+                        // 장소는 변경되지 않았지만 isSelected가 false일 수 있으므로 다시 true로 설정
+                        // (이미 true였다면 영향 없음)
+                         db.collection("markers")
+                                .whereEqualTo("group", currentGroupId)
+                                .whereEqualTo("name", newPlace)
+                                .get()
+                                .addOnSuccessListener(markerSnapshots -> {
+                                    if (!markerSnapshots.isEmpty()) {
+                                        DocumentReference markerRef = markerSnapshots.getDocuments().get(0).getReference();
+                                        markerRef.update("isSelected", true);
+                                    }
+                                });
+                    }
+                    */
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(getContext(), "일정 수정 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
