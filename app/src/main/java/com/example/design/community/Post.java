@@ -1,81 +1,95 @@
 package com.example.design.community;
 
+import com.google.firebase.firestore.Exclude;
+import com.google.firebase.firestore.PropertyName; // 이 임포트가 있는지 확인
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List; // 이 임포트가 있는지 확인
+import java.util.Set;
 
 public class Post {
-    private static int autoIncrementId = 0;
+    private String id;
+    private String title;
+    private String content;
+    private int likeCount;
+    private ArrayList<String> comments;
+    private Set<String> likedUsers; // 내부 표현은 Set
+    private String authorId;
 
-    private int id;                     // 게시글 고유 ID
-    private String title;               // 제목
-    private String content;             // 내용
-    private int likeCount;              // 좋아요 수
-    private ArrayList<String> comments; // 댓글 리스트
-
-    // ✅ 좋아요 누른 사용자 ID 저장 (중복 방지용)
-    private HashSet<String> likedUsers;
-
-    // 생성자 (id 자동 생성, 제목, 내용)
-    public Post(String title, String content) {
-        this(autoIncrementId++, title, content);
+    public Post() {
+        // Firestore 역직렬화에 필요한 public no-argument 생성자
+        this.likedUsers = new HashSet<>(); // NullPointerException 방지를 위해 항상 초기화
+        this.comments = new ArrayList<>();
     }
 
-    // 생성자 (id, 제목, 내용)
-    public Post(int id, String title, String content) {
-        this.id = id;
+    // authorId를 포함한 새 생성자
+    public Post(String title, String content, String authorId) {
         this.title = title;
         this.content = content;
         this.likeCount = 0;
         this.comments = new ArrayList<>();
-        this.likedUsers = new HashSet<>();
+        this.likedUsers = new HashSet<>(); // NullPointerException 방지를 위해 항상 초기화
+        this.authorId = authorId;
     }
 
-    // id getter
-    public int getId() {
-        return id;
+    // --- Getters ---
+    public String getId() { return id; }
+    public String getTitle() { return title; }
+    public String getContent() { return content; }
+    public int getLikeCount() { return likeCount; }
+    public ArrayList<String> getComments() { return comments; }
+    public String getAuthorId() { return authorId; }
+
+    // --- 중요: Firestore가 DB에 직렬화할 때 이 getter를 호출합니다. ---
+    // @Exclude가 붙지 않은 likedUsers 관련 getter는 이것뿐이어야 합니다.
+    // Firestore 필드 이름이 'likedUsers'라면 이 메서드가 그에 대응해야 합니다.
+    // 다른 getter에 @PropertyName을 사용했다면 일관성이 있어야 합니다.
+    // 하지만 FirestoreManager에서 명시적으로 `new ArrayList<>(post.getLikedUsers())`를 사용하므로,
+    // 직렬화를 위해 `getLikedUsersList()`가 엄격하게 필요하지는 않지만, 명확하게 할 수 있습니다.
+
+    // 이 getter는 앱 내부에서 사용됩니다. @Exclude는 Firestore가 직접 매핑하는 것을 막습니다.
+    @Exclude
+    public Set<String> getLikedUsers() {
+        return likedUsers;
     }
 
-    // 제목 getter
-    public String getTitle() {
-        return title;
+
+    // --- Setters ---
+    public void setId(String id) { this.id = id; }
+    public void setTitle(String title) { this.title = title; }
+    public void setContent(String content) { this.content = content; }
+    public void setLikeCount(int likeCount) { this.likeCount = likeCount; }
+    public void setComments(ArrayList<String> comments) { this.comments = comments; }
+    public void setAuthorId(String authorId) { this.authorId = authorId; }
+
+    // *** 중요: Firestore가 데이터베이스에서 'likedUsers' 배열을 역직렬화할 때 이 setter를 사용합니다. ***
+    // Firestore는 배열을 List로 전달하므로, 반드시 List<String>을 받아야 합니다.
+    // Firestore의 필드 이름이 'likedUsers'라면, 메서드 이름은 'setLikedUsers'와 일치해야 합니다.
+    // Firestore에 'likedUsersList'가 있고 Java에 'likedUsers'가 있다면, 여기에 @PropertyName("likedUsersList")를 사용해야 합니다.
+    // 제공된 문서 구조에 "likedUsers"가 배열로 표시되어 있으므로, 이 setter 이름이 올바릅니다.
+    @PropertyName("likedUsers") // "likedUsers" 필드에 이 setter를 사용하도록 Firestore에 명시적으로 알림
+    public void setLikedUsers(List<String> likedUsersList) {
+        if (likedUsersList != null) {
+            this.likedUsers = new HashSet<>(likedUsersList);
+        } else {
+            this.likedUsers = new HashSet<>();
+        }
     }
 
-    // 내용 getter
-    public String getContent() {
-        return content;
-    }
-
-    // 좋아요 수 getter/setter
-    public int getLikeCount() {
-        return likeCount;
-    }
-
-    public void setLikeCount(int likeCount) {
-        this.likeCount = likeCount;
-    }
-
-    // ✅ 사용자 ID 기반 좋아요 추가 (중복 방지)
-    public boolean like(String userId) {
-        if (!likedUsers.contains(userId)) {
+    // --- 비즈니스 로직 ---
+    public boolean toggleLike(String userId) {
+        if (likedUsers.contains(userId)) {
+            likedUsers.remove(userId);
+            likeCount--;
+            return false; // 좋아요 취소됨
+        } else {
             likedUsers.add(userId);
             likeCount++;
-            return true;
+            return true; // 좋아요 눌림
         }
-        return false;
     }
 
-    // ✅ 해당 사용자가 이미 좋아요 눌렀는지 확인
     public boolean hasLiked(String userId) {
         return likedUsers.contains(userId);
-    }
-
-    // 댓글 리스트 getter
-    public ArrayList<String> getComments() {
-        return comments;
-    }
-
-    // 댓글 추가 메서드
-    public void addComment(String comment) {
-        comments.add(comment);
     }
 }

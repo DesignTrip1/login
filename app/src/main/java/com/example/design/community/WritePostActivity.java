@@ -1,3 +1,4 @@
+// WritePostActivity.java
 package com.example.design.community;
 
 import android.content.Intent;

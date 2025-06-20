@@ -2,23 +2,13 @@
 package com.example.design.schedule;
 
 public class ScheduleItem {
-    private String id; // Firestore 문서 ID 추가
+    private String id; // ⭐ 추가
     private String startTime;
     private String endTime;
     private String place;
     private String memo;
 
-    // Firestore에서 객체를 역직렬화할 때 필요한 기본 생성자
-    public ScheduleItem() {
-    }
-
-    public ScheduleItem(String startTime, String endTime, String place, String memo) {
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.place = place;
-        this.memo = memo;
-    }
-
+    // ⭐ id를 포함하는 생성자 추가
     public ScheduleItem(String id, String startTime, String endTime, String place, String memo) {
         this.id = id;
         this.startTime = startTime;
@@ -27,11 +17,20 @@ public class ScheduleItem {
         this.memo = memo;
     }
 
-    // Getter and Setter for ID
+    // 기존 생성자 (id 없이 객체 생성 시)
+    public ScheduleItem(String startTime, String endTime, String place, String memo) {
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.place = place;
+        this.memo = memo;
+    }
+
+    // ⭐ Getter for id
     public String getId() {
         return id;
     }
 
+    // ⭐ Setter for id
     public void setId(String id) {
         this.id = id;
     }
