@@ -34,7 +34,6 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         this.firestoreManager = FirestoreManager.getInstance();
         this.currentLoggedInUserId = currentLoggedInUserId; // 필드 초기화
     }
-
     // (선택 사항) 외부에서 현재 사용자 ID를 업데이트할 수 있는 메서드
     public void updateCurrentUserId(String userId) {
         this.currentLoggedInUserId = userId;

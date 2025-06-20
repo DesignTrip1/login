@@ -11,6 +11,8 @@
     <string name="next">Next</string>
     <string name="previous">Previous</string>
     <string name="places_api_key">YOUR_API_KEY</string>
+    <string name="select_schedule_prompt">일정 선택</string>
+
     <string name="lorem_ipsum">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris
         volutpat, dolor id interdum ullamcorper, risus dolor egestas lectus, sit amet mattis purus

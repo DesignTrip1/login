@@ -129,7 +129,6 @@ public class CommunityActivity extends AppCompatActivity {
             }
         }
     }
-
     @Override
     protected void onResume() {
         super.onResume();
