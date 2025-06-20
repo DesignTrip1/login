@@ -1,3 +1,4 @@
+// FirestoreManager.java
 package com.example.design.community;
 
 import android.util.Log;
@@ -126,7 +127,8 @@ public class FirestoreManager {
         updates.put("likeCount", post.getLikeCount());
         updates.put("comments", post.getComments());
         // 이 부분이 핵심: likedUsers Set을 ArrayList로 변환하여 Firestore에 저장
-        updates.put("likedUsers", new ArrayList<>(post.getLikedUsers()));
+        // Post 클래스에서 메서드 이름이 getLikedUsersList()로 변경되었으므로 이를 사용합니다.
+        updates.put("likedUsers", new ArrayList<>(post.getLikedUsersList())); // <--- 이 부분 수정
 
         postRef.update(updates)
                 .addOnSuccessListener(aVoid -> {

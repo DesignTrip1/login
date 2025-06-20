@@ -1,6 +1,6 @@
+// Post.java
 package com.example.design.community;
 
-// import com.google.firebase.firestore.Exclude; // ✨ 이 임포트는 더 이상 필요하지 않을 수 있습니다. 다른 필드에 @Exclude가 없다면 제거하세요.
 import com.google.firebase.firestore.PropertyName;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -13,12 +13,11 @@ public class Post {
     private String content;
     private int likeCount;
     private ArrayList<String> comments;
-    private Set<String> likedUsers = new HashSet<>(); // ✨ 필드 선언 시 초기화 유지
+    private Set<String> likedUsers = new HashSet<>(); // 필드 선언 시 초기화 유지
     private String authorId;
 
     public Post() {
         // Firestore 역직렬화에 필요한 public no-argument 생성자
-        // likedUsers는 이미 필드 선언 시 초기화되므로 여기서의 명시적 초기화는 불필요
         this.comments = new ArrayList<>();
     }
 
@@ -28,7 +27,6 @@ public class Post {
         this.content = content;
         this.likeCount = 0;
         this.comments = new ArrayList<>();
-        // likedUsers는 이미 필드 선언 시 초기화되므로 여기서의 명시적 초기화는 불필요
         this.authorId = authorId;
     }
 
@@ -40,12 +38,24 @@ public class Post {
     public ArrayList<String> getComments() { return comments; }
     public String getAuthorId() { return authorId; }
 
-    // ✨ 중요: @Exclude 어노테이션을 제거합니다.
-    // Firestore의 CustomClassMapper가 'likedUsers' 필드를 찾도록 허용합니다.
-    // setter에 @PropertyName이 있으므로, 이 getter는 Firestore의 직렬화에 직접 사용되지 않습니다.
-    public Set<String> getLikedUsers() {
-        return likedUsers;
+    // *** 중요: Firestore 직렬화를 위해 likedUsers Set을 ArrayList로 변환하여 반환 ***
+    // Firestore는 Set을 직접 직렬화할 수 없으므로, 이 getter가 List를 반환하도록 합니다.
+    @PropertyName("likedUsers") // Firestore에 저장될 필드 이름을 명시적으로 지정
+    public List<String> getLikedUsersList() { // 메서드 이름 변경하여 혼동 방지
+        return new ArrayList<>(likedUsers); // HashSet의 요소를 새 ArrayList로 변환하여 반환
     }
+
+    // 이전에 있던 getLikedUsers() Set<String> 버전을 삭제하거나 @Exclude 처리 (이 경우 이름을 다르게 하세요)
+    // Firestore는 @PropertyName이 붙은 getter/setter를 우선하고, 없으면 일반 getter/setter를 사용하므로
+    // getLikedUsersList()를 추가하면 기존 getLikedUsers()가 자동으로 무시될 가능성이 높지만,
+    // 명시적으로 문제를 없애려면 아래 getLikedUsers()를 제거하거나 @Exclude 처리하는 것이 좋습니다.
+    // 여기서는 getLikedUsersList()가 우선되므로, 기존 getLikedUsers()를 제거하지 않아도 큰 문제는 없지만,
+    // 혼동을 피하기 위해 제거하거나 이름을 변경하는 것을 권장합니다.
+    // 만약 기존 getLikedUsers()를 유지하려면, @Exclude를 붙여 Firestore 직렬화에서 제외해야 합니다.
+    // @Exclude
+    // public Set<String> getLikedUsers() {
+    //    return likedUsers;
+    // }
 
 
     // --- Setters ---

@@ -9,6 +9,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -48,32 +49,75 @@ public class CommunityActivity extends AppCompatActivity {
 
         // 현재 로그인된 사용자 ID 가져오기
         currentLoggedInUserId = sharedPreferences.getString(KEY_USER_ID, null);
+        Log.d(TAG, "Current Logged In User ID: " + currentLoggedInUserId);
+
 
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.addItemDecoration(new PostItemDecoration());
+        recyclerView.addItemDecoration(new PostItemDecoration()); // 아이템 간 간격 추가
 
-        // PostAdapter를 초기화할 때 현재 로그인된 사용자 ID를 전달
-        adapter = new PostAdapter(this, postList, currentLoggedInUserId); // currentLoggedInUserId 추가
+        adapter = new PostAdapter(this, postList, currentLoggedInUserId); // 사용자 ID를 어댑터에 전달
         recyclerView.setAdapter(adapter);
 
-        loadPostsFromFirestore();
+        loadPostsFromFirestore(); // 초기 게시물 로드
+
+        // 기존에 R.id.fabAddPost에 대한 리스너 설정 부분이 여기에 있었으나,
+        // 해당 ID가 레이아웃에 없으므로 제거됩니다.
+        // 게시글 작성은 이제 메뉴 아이템 (action_write)을 통해서만 이루어집니다.
+    }
+
+    // 게시물 작성 후 결과 처리 (Firestore 직접 업데이트로 변경)
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.d(TAG, "onActivityResult called. RequestCode: " + requestCode + ", ResultCode: " + resultCode);
+
+        if (requestCode == REQUEST_CODE_WRITE_POST && resultCode == RESULT_OK) {
+            Log.d(TAG, "WritePostActivity returned RESULT_OK. Reloading posts from Firestore.");
+            // WritePostActivity에서 게시물을 이미 Firestore에 추가했으므로,
+            // CommunityActivity는 그저 최신 목록을 다시 불러오기만 하면 됩니다.
+            loadPostsFromFirestore();
+        } else if (requestCode == REQUEST_CODE_WRITE_POST && resultCode == RESULT_CANCELED) {
+            Log.d(TAG, "WritePostActivity returned RESULT_CANCELED.");
+            Toast.makeText(this, "게시글 작성이 취소되거나 실패했습니다.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // 액티비티로 돌아올 때마다 사용자 ID를 다시 가져오고 어댑터를 업데이트 (혹시 로그인/로그아웃 상태 변경 시)
+        currentLoggedInUserId = sharedPreferences.getString(KEY_USER_ID, null);
+        // 어댑터에 현재 로그인된 사용자 ID를 업데이트
+        if (adapter != null) {
+            adapter.updateCurrentUserId(currentLoggedInUserId); // PostAdapter의 updateCurrentUserId 호출
+        }
+        loadPostsFromFirestore(); // 게시물 목록 새로고침
     }
 
     private void loadPostsFromFirestore() {
+        Log.d(TAG, "Loading posts from Firestore...");
         firestoreManager.getPosts(new FirestoreManager.OnPostsLoadedListener() {
             @Override
             public void onPostsLoaded(ArrayList<Post> posts) {
-                postList.clear();
-                postList.addAll(posts);
-                adapter.notifyDataSetChanged();
-                Log.d(TAG, "Posts loaded: " + posts.size());
+                if (!isFinishing() && !isDestroyed()) { // 액티비티가 유효한 상태인지 확인
+                    Log.d(TAG, "Posts loaded successfully. Count: " + posts.size());
+                    postList.clear();
+                    postList.addAll(posts);
+                    adapter.notifyDataSetChanged();
+                } else {
+                    Log.d(TAG, "Activity finished or destroyed, skipping UI update.");
+                }
             }
 
             @Override
             public void onError(Exception e) {
-                Log.e(TAG, "Error loading posts: " + e.getMessage());
-                Toast.makeText(CommunityActivity.this, "게시글 로드 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                if (!isFinishing() && !isDestroyed()) { // 액티비티가 유효한 상태인지 확인
+                    Log.e(TAG, "Error loading posts: " + e.getMessage(), e);
+                    Toast.makeText(CommunityActivity.this, "게시글 로드 실패: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                } else {
+                    Log.d(TAG, "Activity finished or destroyed, skipping error toast.");
+                }
             }
         });
     }
@@ -85,59 +129,22 @@ public class CommunityActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            finish();
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+        if (id == android.R.id.home) { // 뒤로가기 버튼 클릭 시
+            onBackPressed(); // 현재 액티비티 종료
             return true;
-        } else if (item.getItemId() == R.id.action_write) { // R.id.action_write로 변경되었음을 확인
+        } else if (id == R.id.action_write) { // R.id.action_write 메뉴 아이템 처리
             // 게시글 작성 시 현재 로그인된 사용자 ID를 다시 확인
             currentLoggedInUserId = sharedPreferences.getString(KEY_USER_ID, null);
             if (currentLoggedInUserId == null) {
                 Toast.makeText(this, "게시글을 작성하려면 로그인해야 합니다.", Toast.LENGTH_SHORT).show();
                 return true;
             }
-
             Intent intent = new Intent(this, WritePostActivity.class);
             startActivityForResult(intent, REQUEST_CODE_WRITE_POST);
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == REQUEST_CODE_WRITE_POST && resultCode == RESULT_OK && data != null) {
-            String title = data.getStringExtra("title");
-            String content = data.getStringExtra("content");
-
-            if (title != null && content != null) {
-                // 게시글 작성 시 authorId로 현재 로그인된 사용자 ID를 사용
-                String authorId = currentLoggedInUserId;
-
-                // 새로운 게시물을 Firestore에 추가 (authorId 포함)
-                Post newPost = new Post(title, content, authorId);
-                firestoreManager.addPost(newPost, (success, postId) -> {
-                    if (success) {
-                        Toast.makeText(CommunityActivity.this, "게시글이 성공적으로 작성되었습니다.", Toast.LENGTH_SHORT).show();
-                        loadPostsFromFirestore();
-                    } else {
-                        Toast.makeText(CommunityActivity.this, "게시글 작성에 실패했습니다.", Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }
-        }
-    }
-    @Override
-    protected void onResume() {
-        super.onResume();
-        // 액티비티로 돌아올 때마다 사용자 ID를 다시 가져오고 어댑터를 업데이트 (혹시 로그인/로그아웃 상태 변경 시)
-        currentLoggedInUserId = sharedPreferences.getString(KEY_USER_ID, null);
-        // 어댑터에 현재 로그인된 사용자 ID를 업데이트
-        if (adapter != null) {
-            adapter.updateCurrentUserId(currentLoggedInUserId); // PostAdapter의 updateCurrentUserId 호출
-        }
-        loadPostsFromFirestore(); // 게시물 목록 새로고침
     }
 }
